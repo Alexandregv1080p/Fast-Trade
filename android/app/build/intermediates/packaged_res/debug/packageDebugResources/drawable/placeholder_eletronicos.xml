@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="160dp"
+    android:height="160dp"
+    android:viewportWidth="160"
+    android:viewportHeight="160">
+    <!-- Background -->
+    <path android:fillColor="#FFF8E1" android:pathData="M0,0h160v160H0z"/>
+    <!-- Phone body -->
+    <path android:fillColor="#B8860B"
+        android:pathData="M68,30 L92,30 Q96,30 96,34 L96,126 Q96,130 92,130 L68,130 Q64,130 64,126 L64,34 Q64,30 68,30 Z"/>
+    <!-- Screen -->
+    <path android:fillColor="#FFF8E1"
+        android:pathData="M68,38 L92,38 L92,116 L68,116 Z"/>
+    <!-- Home button -->
+    <path android:fillColor="#FFF8E1"
+        android:pathData="M80,120 m-4,0 a4,4 0 1,0 8,0 a4,4 0 1,0 -8,0"/>
+    <!-- Camera dot -->
+    <path android:fillColor="#FFF8E1"
+        android:pathData="M80,34 m-2,0 a2,2 0 1,0 4,0 a2,2 0 1,0 -4,0"/>
+    <!-- Screen content lines -->
+    <path android:fillColor="#D4AF37" android:pathData="M72,50 L88,50 Q89,50 89,51 L89,53 Q89,54 88,54 L72,54 Q71,54 71,53 L71,51 Q71,50 72,50 Z"/>
+    <path android:fillColor="#D4AF37" android:alpha="0.6" android:pathData="M72,58 L84,58 L84,60 L72,60 Z"/>
+    <path android:fillColor="#D4AF37" android:alpha="0.4" android:pathData="M72,64 L80,64 L80,66 L72,66 Z"/>
+</vector>

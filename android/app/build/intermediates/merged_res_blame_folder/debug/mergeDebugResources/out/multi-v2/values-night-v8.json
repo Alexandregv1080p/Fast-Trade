@@ -1,0 +1,19 @@
+{
+    "logs": [
+        {
+            "outputFile": "com.fasttrade.android.app-mergeDebugResources-59:/values-night-v8/values-night-v8.xml",
+            "map": [
+                {
+                    "source": "C:\\Users\\Alexandre\\.gradle\\caches\\9.0.0\\transforms\\bb78dc3ff99eb6c93cd29762553e643d\\transformed\\core-splashscreen-1.0.1\\res\\values-night-v8\\values-night-v8.xml",
+                    "from": {
+                        "startLines": "2",
+                        "startColumns": "4",
+                        "startOffsets": "55",
+                        "endColumns": "85",
+                        "endOffsets": "136"
+                    }
+                }
+            ]
+        }
+    ]
+}

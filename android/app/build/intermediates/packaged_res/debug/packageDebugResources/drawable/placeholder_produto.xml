@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Placeholder genérico para produtos sem imagem -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="160dp"
+    android:height="160dp"
+    android:viewportWidth="160"
+    android:viewportHeight="160">
+    <!-- Background gradient-like -->
+    <path android:fillColor="#FFF8E1" android:pathData="M0,0h160v160H0z"/>
+    <!-- Tag shape -->
+    <path android:fillColor="#B8860B"
+        android:pathData="M50,35 L110,35 Q115,35 118,38 L125,55 Q128,60 125,65 L80,125 Q78,128 75,125 L35,70 Q32,65 35,60 L42,38 Q45,35 50,35 Z"/>
+    <!-- Tag hole -->
+    <path android:fillColor="#FFF8E1"
+        android:pathData="M82,48 m-7,0 a7,7 0 1,0 14,0 a7,7 0 1,0 -14,0"/>
+    <!-- Tag stripe -->
+    <path android:fillColor="#D4AF37" android:alpha="0.5"
+        android:pathData="M48,62 L112,62 L112,68 L48,68 Z"/>
+    <!-- Tag stripe 2 -->
+    <path android:fillColor="#D4AF37" android:alpha="0.3"
+        android:pathData="M52,76 L108,76 L108,82 L52,82 Z"/>
+    <!-- FT logo text area -->
+    <path android:fillColor="#FFF8E1" android:alpha="0.2"
+        android:pathData="M65,90 L95,90 L95,108 L65,108 Z"/>
+</vector>

@@ -1,0 +1,17 @@
+R_DEF: Internal format may change without notice
+local
+drawable ic_launcher_background
+drawable ic_launcher_foreground
+drawable ic_splash_logo
+drawable placeholder_casa
+drawable placeholder_eletronicos
+drawable placeholder_esportes
+drawable placeholder_games
+drawable placeholder_livros
+drawable placeholder_produto
+drawable placeholder_roupas
+mipmap ic_launcher
+mipmap ic_launcher_round
+string app_name
+style Theme.FastTrade
+style Theme.FastTrade.Splash

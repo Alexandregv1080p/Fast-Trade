@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="160dp"
+    android:height="160dp"
+    android:viewportWidth="160"
+    android:viewportHeight="160">
+    <path android:fillColor="#FFF8E1" android:pathData="M0,0h160v160H0z"/>
+    <!-- Book body -->
+    <path android:fillColor="#B8860B"
+        android:pathData="M45,30 L115,30 Q118,30 118,33 L118,127 Q118,130 115,130 L45,130 Q42,130 42,127 L42,33 Q42,30 45,30 Z"/>
+    <!-- Spine -->
+    <path android:fillColor="#8B6914"
+        android:pathData="M42,30 L54,30 L54,130 L42,130 Z"/>
+    <!-- Page lines -->
+    <path android:fillColor="#FFF8E1" android:alpha="0.9"
+        android:pathData="M60,50 L110,50 L110,54 L60,54 Z"/>
+    <path android:fillColor="#FFF8E1" android:alpha="0.7"
+        android:pathData="M60,62 L110,62 L110,66 L60,66 Z"/>
+    <path android:fillColor="#FFF8E1" android:alpha="0.7"
+        android:pathData="M60,74 L110,74 L110,78 L60,78 Z"/>
+    <path android:fillColor="#FFF8E1" android:alpha="0.5"
+        android:pathData="M60,86 L90,86 L90,90 L60,90 Z"/>
+    <!-- Bookmark -->
+    <path android:fillColor="#D4AF37"
+        android:pathData="M100,30 L112,30 L112,56 L106,50 L100,56 Z"/>
+</vector>
