@@ -1,0 +1,77 @@
+@use 'styles/tokens';
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  font-family: var(--font-family);
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--color-text);
+  background: var(--color-bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a { text-decoration: none; color: inherit; }
+button { cursor: pointer; font-family: inherit; }
+input, select, textarea { font-family: inherit; color: var(--color-text); }
+
+// ── Scrollbar ──────────────────────────────────────────────────────────────
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--color-border-strong); border-radius: var(--radius-full); }
+::-webkit-scrollbar-thumb:hover { background: var(--color-text-light); }
+
+// ── Utilities ──────────────────────────────────────────────────────────────
+.text-muted    { color: var(--color-text-muted); }
+.text-success  { color: var(--color-success); }
+.text-error    { color: var(--color-error); }
+.font-bold     { font-weight: 700; }
+.font-semibold { font-weight: 600; }
+
+// ── Badges ─────────────────────────────────────────────────────────────────
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .3px;
+  text-transform: uppercase;
+}
+.badge--success { background: var(--color-success-bg); color: var(--color-success); }
+.badge--error   { background: var(--color-error-bg);   color: var(--color-error); }
+.badge--warning { background: var(--color-warning-bg); color: #92400e; }
+.badge--info    { background: var(--color-accent-bg);  color: var(--color-accent); }
+.badge--gray    { background: var(--color-bg-alt);     color: var(--color-text-muted); }
+.badge--pending { background: var(--color-warning-bg); color: #92400e; }
+
+// ── Form fields (global) ───────────────────────────────────────────────────
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.form-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: .5px;
+}
+.form-input {
+  padding: 9px 12px;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  outline: none;
+  transition: border-color var(--transition), box-shadow var(--transition);
+  background: var(--color-surface);
+  width: 100%;
+}
+.form-input:focus {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px rgba(37,99,235,.12);
+}
