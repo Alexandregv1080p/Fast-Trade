@@ -6,10 +6,10 @@
     android:viewportHeight="160">
     <path android:fillColor="#FFF8E1" android:pathData="M0,0h160v160H0z"/>
     <!-- Book body -->
-    <path android:fillColor="#B8860B"
+    <path android:fillColor="#1B7A3B"
         android:pathData="M45,30 L115,30 Q118,30 118,33 L118,127 Q118,130 115,130 L45,130 Q42,130 42,127 L42,33 Q42,30 45,30 Z"/>
     <!-- Spine -->
-    <path android:fillColor="#8B6914"
+    <path android:fillColor="#0E4D23"
         android:pathData="M42,30 L54,30 L54,130 L42,130 Z"/>
     <!-- Page lines -->
     <path android:fillColor="#FFF8E1" android:alpha="0.9"
@@ -21,6 +21,6 @@
     <path android:fillColor="#FFF8E1" android:alpha="0.5"
         android:pathData="M60,86 L90,86 L90,90 L60,90 Z"/>
     <!-- Bookmark -->
-    <path android:fillColor="#D4AF37"
+    <path android:fillColor="#2E9E4F"
         android:pathData="M100,30 L112,30 L112,56 L106,50 L100,56 Z"/>
 </vector>

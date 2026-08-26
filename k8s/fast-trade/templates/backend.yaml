@@ -1,0 +1,232 @@
+{{- if .Values.backend.enabled }}
+{{- $c := .Values.backend }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "fast-trade.fullname" . }}-{{ $c.name }}
+  labels:
+    {{- include "fast-trade.labels" . | nindent 4 }}
+    app.kubernetes.io/component: {{ $c.name }}
+spec:
+  {{- if not $c.autoscaling.enabled }}
+  replicas: {{ $c.replicaCount }}
+  {{- end }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  selector:
+    matchLabels:
+      {{- include "fast-trade.selectorLabels" (dict "ctx" . "component" $c.name) | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "fast-trade.labels" . | nindent 8 }}
+        app.kubernetes.io/component: {{ $c.name }}
+      annotations:
+        # Forca rollout dos pods quando ConfigMap ou Secret mudarem
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        checksum/secrets: {{ include (print $.Template.BasePath "/secrets.yaml") . | sha256sum }}
+    spec:
+      serviceAccountName: {{ include "fast-trade.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if or .Values.postgresql.enabled .Values.migrations.enabled }}
+      initContainers:
+        {{- if .Values.postgresql.enabled }}
+        # Espera o Postgres aceitar conexoes antes de subir a API
+        - name: wait-for-db
+          image: {{ .Values.postgresql.image }}
+          command:
+            - sh
+            - -c
+            - |
+              until pg_isready -h {{ include "fast-trade.dbHost" . }} -p {{ include "fast-trade.dbPort" . }}; do
+                echo "aguardando postgres..."
+                sleep 2
+              done
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsUser: 999
+            capabilities:
+              drop: ["ALL"]
+        {{- end }}
+        {{- if .Values.migrations.enabled }}
+        # Com o Flyway desligado na aplicacao, o Hibernate roda em `validate` e
+        # falharia se subisse antes do Job de migration. Aqui esperamos o
+        # historico do Flyway registrar pelo menos uma migration bem-sucedida.
+        - name: wait-for-migrations
+          image: {{ .Values.postgresql.image }}
+          env:
+            - name: PGHOST
+              value: {{ include "fast-trade.dbHost" . | quote }}
+            - name: PGPORT
+              value: {{ include "fast-trade.dbPort" . | quote }}
+            - name: PGDATABASE
+              value: {{ include "fast-trade.dbName" . | quote }}
+            - name: PGUSER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "fast-trade.dbSecretName" . }}
+                  key: username
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "fast-trade.dbSecretName" . }}
+                  key: password
+          command:
+            - sh
+            - -c
+            - |
+              until psql -tAc \
+                "SELECT 1 FROM flyway_schema_history WHERE success ORDER BY installed_rank DESC LIMIT 1" \
+                2>/dev/null | grep -q 1; do
+                echo "aguardando o job de migration..."
+                sleep 3
+              done
+              echo "schema migrado."
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsUser: 999
+            capabilities:
+              drop: ["ALL"]
+        {{- end }}
+      {{- end }}
+      containers:
+        - name: {{ $c.name }}
+          image: {{ include "fast-trade.image" (dict "ctx" . "component" $c) }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: {{ include "fast-trade.fullname" . }}-backend
+          env:
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "fast-trade.dbSecretName" . }}
+                  key: username
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "fast-trade.dbSecretName" . }}
+                  key: password
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "fast-trade.jwtSecretName" . }}
+                  key: jwt-secret
+            - name: JWT_EXPIRATION
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "fast-trade.jwtSecretName" . }}
+                  key: jwt-expiration
+          startupProbe:
+            httpGet:
+              path: {{ $c.probes.startup.path }}
+              port: http
+            periodSeconds: {{ $c.probes.startup.periodSeconds }}
+            failureThreshold: {{ $c.probes.startup.failureThreshold }}
+          livenessProbe:
+            httpGet:
+              path: {{ $c.probes.liveness.path }}
+              port: http
+            initialDelaySeconds: {{ $c.probes.liveness.initialDelaySeconds }}
+            periodSeconds: {{ $c.probes.liveness.periodSeconds }}
+            failureThreshold: {{ $c.probes.liveness.failureThreshold }}
+          readinessProbe:
+            httpGet:
+              path: {{ $c.probes.readiness.path }}
+              port: http
+            initialDelaySeconds: {{ $c.probes.readiness.initialDelaySeconds }}
+            periodSeconds: {{ $c.probes.readiness.periodSeconds }}
+            failureThreshold: {{ $c.probes.readiness.failureThreshold }}
+          resources:
+            {{- toYaml $c.resources | nindent 12 }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "fast-trade.fullname" . }}-{{ $c.name }}
+  labels:
+    {{- include "fast-trade.labels" . | nindent 4 }}
+    app.kubernetes.io/component: {{ $c.name }}
+spec:
+  type: {{ $c.service.type }}
+  ports:
+    - port: {{ $c.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "fast-trade.selectorLabels" (dict "ctx" . "component" $c.name) | nindent 4 }}
+{{- if $c.autoscaling.enabled }}
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ include "fast-trade.fullname" . }}-{{ $c.name }}
+  labels:
+    {{- include "fast-trade.labels" . | nindent 4 }}
+    app.kubernetes.io/component: {{ $c.name }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ include "fast-trade.fullname" . }}-{{ $c.name }}
+  minReplicas: {{ $c.autoscaling.minReplicas }}
+  maxReplicas: {{ $c.autoscaling.maxReplicas }}
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ $c.autoscaling.targetCPUUtilizationPercentage }}
+{{- end }}
+{{- if $c.podDisruptionBudget.enabled }}
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "fast-trade.fullname" . }}-{{ $c.name }}
+  labels:
+    {{- include "fast-trade.labels" . | nindent 4 }}
+    app.kubernetes.io/component: {{ $c.name }}
+spec:
+  minAvailable: {{ $c.podDisruptionBudget.minAvailable }}
+  selector:
+    matchLabels:
+      {{- include "fast-trade.selectorLabels" (dict "ctx" . "component" $c.name) | nindent 6 }}
+{{- end }}
+{{- end }}

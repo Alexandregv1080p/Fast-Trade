@@ -1,0 +1,182 @@
+# Valores padrao do chart Fast Trade.
+# Para ambiente local (kind/k3d) use: helm install ft ./k8s/fast-trade -f values-local.yaml
+
+nameOverride: ""
+fullnameOverride: ""
+
+# Registry das imagens. O workflow do GitHub Actions publica em ghcr.io/<owner>/<repo>-<app>
+image:
+  registry: ghcr.io
+  repository: alexandre/fast-trade
+  pullPolicy: IfNotPresent
+  # Se vazio, usa o appVersion do Chart.yaml
+  tag: ""
+
+imagePullSecrets: []
+
+# ------------------------------------------------------------- migrations
+# Job Helm que roda o Flyway antes dos pods da API subirem.
+# Se desabilitado, a propria aplicacao migra no boot (spring.flyway.enabled=true).
+migrations:
+  enabled: true
+  image: flyway/flyway:10.17.3-alpine
+  backoffLimit: 3              # 3 tentativas antes de marcar o Job como falho
+  connectRetries: 20           # o Flyway tambem tenta reconectar sozinho
+  ttlSecondsAfterFinished: 600
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      memory: 512Mi
+
+# ---------------------------------------------------------------- backend
+backend:
+  enabled: true
+  name: backend
+  replicaCount: 2
+  image:
+    name: backend
+    tag: ""          # sobrescreve image.tag para este componente
+  service:
+    type: ClusterIP
+    port: 8080
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      memory: 1Gi
+  # Config nao-sensivel -> vai para o ConfigMap
+  config:
+    JPA_DDL_AUTO: update
+    SQL_INIT_MODE: always
+    LOG_LEVEL: INFO
+    JAVA_OPTS: "-XX:MaxRAMPercentage=75.0"
+  probes:
+    liveness:
+      path: /actuator/health/liveness
+      initialDelaySeconds: 40
+      periodSeconds: 15
+      failureThreshold: 3
+    readiness:
+      path: /actuator/health/readiness
+      initialDelaySeconds: 20
+      periodSeconds: 10
+      failureThreshold: 3
+    startup:
+      path: /actuator/health
+      periodSeconds: 5
+      failureThreshold: 30   # ate 150s para subir antes da liveness assumir
+  autoscaling:
+    enabled: false
+    minReplicas: 2
+    maxReplicas: 6
+    targetCPUUtilizationPercentage: 75
+  podDisruptionBudget:
+    enabled: true
+    minAvailable: 1
+
+# --------------------------------------------------------------- frontend
+frontend:
+  enabled: true
+  name: frontend
+  replicaCount: 2
+  image:
+    name: frontend
+    tag: ""
+  service:
+    type: ClusterIP
+    port: 80
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      memory: 128Mi
+  probes:
+    liveness:
+      path: /healthz
+      initialDelaySeconds: 10
+      periodSeconds: 20
+    readiness:
+      path: /healthz
+      initialDelaySeconds: 5
+      periodSeconds: 10
+  autoscaling:
+    enabled: false
+    minReplicas: 2
+    maxReplicas: 4
+    targetCPUUtilizationPercentage: 75
+  podDisruptionBudget:
+    enabled: true
+    minAvailable: 1
+
+# --------------------------------------------------------------- postgres
+postgresql:
+  # false = usa um banco externo; preencha externalDatabase abaixo
+  enabled: true
+  name: postgres
+  image: postgres:16-alpine
+  service:
+    port: 5432
+  auth:
+    database: fasttrade
+    username: fasttrade
+    # Em producao passe via --set ou um Secret gerenciado (ex: External Secrets)
+    password: fasttrade123
+    # Se preenchido, o chart NAO cria o Secret e usa este aqui
+    existingSecret: ""
+  persistence:
+    enabled: true
+    size: 5Gi
+    storageClass: ""      # vazio = StorageClass default do cluster
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      memory: 512Mi
+
+externalDatabase:
+  host: ""
+  port: 5432
+  database: fasttrade
+  username: fasttrade
+  password: ""
+  existingSecret: ""
+
+# ------------------------------------------------------------------ auth
+jwt:
+  # Gere um valor real: openssl rand -base64 64
+  secret: "4f6e8b2c9d1a7e3f5g2h8i4j6k0l2m9n1o3p5q7r2s4t6u8v0w2x4y6z8a1b3c5"
+  expiration: "604800000"
+  existingSecret: ""
+
+# --------------------------------------------------------------- ingress
+ingress:
+  enabled: true
+  className: nginx
+  host: fasttrade.local
+  annotations:
+    # WebSocket (STOMP/SockJS) precisa de timeout longo
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+  tls:
+    enabled: false
+    secretName: fast-trade-tls
+
+# ----------------------------------------------------------------- comum
+serviceAccount:
+  create: true
+  name: ""
+  annotations: {}
+
+podSecurityContext:
+  runAsNonRoot: true
+  seccompProfile:
+    type: RuntimeDefault
+
+nodeSelector: {}
+tolerations: []
+affinity: {}

@@ -76,4 +76,13 @@ object ApiModule {
     @Singleton
     fun provideApi(retrofit: Retrofit): FastTradeApi =
         retrofit.create(FastTradeApi::class.java)
+
+    @Provides
+    @Singleton
+    fun provideViaCepApi(): ViaCepApi =
+        Retrofit.Builder()
+            .baseUrl("https://viacep.com.br/")
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+            .create(ViaCepApi::class.java)
 }

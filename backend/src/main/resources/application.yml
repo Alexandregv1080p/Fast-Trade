@@ -1,36 +1,67 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/fasttrade
-    username: fasttrade
-    password: fasttrade123
+    # Os defaults mantem o `./mvnw spring-boot:run` local funcionando sem nenhuma env var.
+    # No Kubernetes esses valores vem do ConfigMap e do Secret do chart.
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:fasttrade}
+    username: ${DB_USER:fasttrade}
+    password: ${DB_PASSWORD:fasttrade123}
     driver-class-name: org.postgresql.Driver
 
   jpa:
     hibernate:
-      ddl-auto: update
+      # `validate`: o Hibernate compara as entidades com o schema e falha o boot
+      # se divergirem. Quem cria e altera tabela agora e o Flyway, nunca o ORM.
+      ddl-auto: ${JPA_DDL_AUTO:validate}
     show-sql: false
-    defer-datasource-initialization: true
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
 
-  sql:
-    init:
-      mode: always
-      data-locations: classpath:data.sql
+  # Migrations versionadas em src/main/resources/db/migration
+  flyway:
+    # Local: a propria aplicacao migra no boot (nada muda no seu fluxo).
+    # No Kubernetes o chart passa FLYWAY_ENABLED=false e um Job dedicado
+    # roda as migrations antes dos pods novos subirem.
+    enabled: ${FLYWAY_ENABLED:true}
+    locations: classpath:db/migration
+    baseline-on-migrate: true      # adota bancos que ja existiam com ddl-auto
+    baseline-version: 0
+    validate-on-migrate: true
+
+  # Graceful shutdown: da tempo das conexoes fecharem durante um rolling update
+  lifecycle:
+    timeout-per-shutdown-phase: 20s
 
 server:
   port: 8080
   error:
     include-message: always
+  shutdown: graceful
 
 app:
   jwt:
-    secret: 4f6e8b2c9d1a7e3f5g2h8i4j6k0l2m9n1o3p5q7r2s4t6u8v0w2x4y6z8a1b3c5
-    expiration: 604800000  # 7 dias em ms
+    secret: ${JWT_SECRET:4f6e8b2c9d1a7e3f5g2h8i4j6k0l2m9n1o3p5q7r2s4t6u8v0w2x4y6z8a1b3c5}
+    expiration: ${JWT_EXPIRATION:604800000}  # 7 dias em ms
+
+# Actuator: expoe apenas health e info, com os grupos que as probes do k8s consomem
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: when-authorized
+  health:
+    livenessstate:
+      enabled: true
+    readinessstate:
+      enabled: true
 
 logging:
   level:
-    com.fasttrade: DEBUG
+    com.fasttrade: ${LOG_LEVEL:DEBUG}
     org.springframework.security: WARN

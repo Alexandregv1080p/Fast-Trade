@@ -2,12 +2,12 @@ package com.fasttrade.android.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// Brand — matches web _tokens.scss
-val Primary       = Color(0xFFB8860B)   // Gold/Bronze from logo (#B8860B)
-val PrimaryLight  = Color(0xFFD4AF37)   // $color-primary-light
-val PrimaryDark   = Color(0xFF8B6914)   // $color-primary-dark
-val Secondary     = Color(0xFF1B5E20)   // $color-accent-green
-val SecondaryLight= Color(0xFF2E7D32)
+// Brand — preto & verde
+val Primary       = Color(0xFF1B7A3B)   // Brand green
+val PrimaryLight  = Color(0xFF2E9E4F)   // Verde claro
+val PrimaryDark   = Color(0xFF0E4D23)   // Verde escuro
+val Secondary     = Color(0xFF121212)   // Preto de marca
+val SecondaryLight= Color(0xFF2C2C2C)
 
 // Neutrals — matches web gray scale
 val Background    = Color(0xFFFAFAFA)   // $color-gray-50

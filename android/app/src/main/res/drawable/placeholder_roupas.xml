@@ -6,7 +6,7 @@
     android:viewportHeight="160">
     <path android:fillColor="#FFF8E1" android:pathData="M0,0h160v160H0z"/>
     <!-- T-shirt shape -->
-    <path android:fillColor="#B8860B"
+    <path android:fillColor="#1B7A3B"
         android:pathData="
         M60,35 L72,35 Q80,48 88,35 L100,35
         L118,55 L102,62 L102,125 L58,125 L58,62 L42,55 Z"/>
@@ -14,9 +14,9 @@
     <path android:fillColor="#FFF8E1"
         android:pathData="M72,35 Q80,50 88,35 Q84,40 80,42 Q76,40 72,35 Z"/>
     <!-- Sleeve lines -->
-    <path android:fillColor="#D4AF37" android:alpha="0.4"
+    <path android:fillColor="#2E9E4F" android:alpha="0.4"
         android:pathData="M42,55 L58,62 M102,62 L118,55"/>
     <!-- Body stripe -->
-    <path android:fillColor="#D4AF37" android:alpha="0.3"
+    <path android:fillColor="#2E9E4F" android:alpha="0.3"
         android:pathData="M58,80 L102,80 L102,86 L58,86 Z"/>
 </vector>

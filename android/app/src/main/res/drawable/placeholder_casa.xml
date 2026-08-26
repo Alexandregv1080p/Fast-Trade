@@ -6,10 +6,10 @@
     android:viewportHeight="160">
     <path android:fillColor="#FFF8E1" android:pathData="M0,0h160v160H0z"/>
     <!-- House body -->
-    <path android:fillColor="#B8860B"
+    <path android:fillColor="#1B7A3B"
         android:pathData="M40,130 L40,75 L80,40 L120,75 L120,130 Z"/>
     <!-- Roof darker -->
-    <path android:fillColor="#8B6914"
+    <path android:fillColor="#0E4D23"
         android:pathData="M30,78 L80,38 L130,78 L120,78 L80,46 L40,78 Z"/>
     <!-- Door -->
     <path android:fillColor="#FFF8E1"
@@ -21,8 +21,8 @@
     <path android:fillColor="#FFF8E1"
         android:pathData="M98,85 L113,85 L113,100 L98,100 Z"/>
     <!-- Window cross -->
-    <path android:fillColor="#B8860B" android:pathData="M54,85 L55,100 M47,92 L62,93"/>
-    <path android:fillColor="#B8860B" android:pathData="M105,85 L106,100 M98,92 L113,93"/>
+    <path android:fillColor="#1B7A3B" android:pathData="M54,85 L55,100 M47,92 L62,93"/>
+    <path android:fillColor="#1B7A3B" android:pathData="M105,85 L106,100 M98,92 L113,93"/>
     <!-- Door knob -->
-    <path android:fillColor="#D4AF37" android:pathData="M85,113 m-2,0 a2,2 0 1,0 4,0 a2,2 0 1,0 -4,0"/>
+    <path android:fillColor="#2E9E4F" android:pathData="M85,113 m-2,0 a2,2 0 1,0 4,0 a2,2 0 1,0 -4,0"/>
 </vector>

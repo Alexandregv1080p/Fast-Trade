@@ -1,0 +1,110 @@
+{{- if .Values.postgresql.enabled }}
+{{- $c := .Values.postgresql }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "fast-trade.fullname" . }}-{{ $c.name }}
+  labels:
+    {{- include "fast-trade.labels" . | nindent 4 }}
+    app.kubernetes.io/component: {{ $c.name }}
+spec:
+  # Headless: cada pod do StatefulSet ganha um DNS estavel
+  clusterIP: None
+  ports:
+    - port: {{ $c.service.port }}
+      targetPort: postgres
+      name: postgres
+  selector:
+    {{- include "fast-trade.selectorLabels" (dict "ctx" . "component" $c.name) | nindent 4 }}
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "fast-trade.fullname" . }}-{{ $c.name }}
+  labels:
+    {{- include "fast-trade.labels" . | nindent 4 }}
+    app.kubernetes.io/component: {{ $c.name }}
+spec:
+  serviceName: {{ include "fast-trade.fullname" . }}-{{ $c.name }}
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "fast-trade.selectorLabels" (dict "ctx" . "component" $c.name) | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "fast-trade.labels" . | nindent 8 }}
+        app.kubernetes.io/component: {{ $c.name }}
+    spec:
+      serviceAccountName: {{ include "fast-trade.serviceAccountName" . }}
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 999
+        fsGroup: 999
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: {{ $c.name }}
+          image: {{ $c.image }}
+          ports:
+            - name: postgres
+              containerPort: 5432
+          env:
+            - name: POSTGRES_DB
+              value: {{ $c.auth.database | quote }}
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "fast-trade.dbSecretName" . }}
+                  key: username
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "fast-trade.dbSecretName" . }}
+                  key: password
+            # O volume e montado em /var/lib/postgresql/data; o subdiretorio
+            # evita conflito com lost+found em alguns provisionadores
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+          livenessProbe:
+            exec:
+              command: ["sh", "-c", "pg_isready -U $POSTGRES_USER -d $POSTGRES_DB"]
+            initialDelaySeconds: 30
+            periodSeconds: 15
+            timeoutSeconds: 5
+          readinessProbe:
+            exec:
+              command: ["sh", "-c", "pg_isready -U $POSTGRES_USER -d $POSTGRES_DB"]
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+          resources:
+            {{- toYaml $c.resources | nindent 12 }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+      {{- if not $c.persistence.enabled }}
+      volumes:
+        - name: data
+          emptyDir: {}
+      {{- end }}
+  {{- if $c.persistence.enabled }}
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+        labels:
+          {{- include "fast-trade.labels" . | nindent 10 }}
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        {{- if $c.persistence.storageClass }}
+        storageClassName: {{ $c.persistence.storageClass | quote }}
+        {{- end }}
+        resources:
+          requests:
+            storage: {{ $c.persistence.size }}
+  {{- end }}
+{{- end }}

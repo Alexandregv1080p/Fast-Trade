@@ -1,0 +1,13 @@
+apiVersion: v2
+name: fast-trade
+description: Marketplace Fast Trade - API Spring Boot, painel Angular e PostgreSQL
+type: application
+version: 0.1.0
+appVersion: "0.0.1"
+keywords:
+  - marketplace
+  - spring-boot
+  - angular
+  - postgresql
+maintainers:
+  - name: Alexandre

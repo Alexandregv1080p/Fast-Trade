@@ -18,6 +18,12 @@ data class LoginResponse(
 
 data class ForgotPasswordRequest(val email: String)
 
+data class RegisterRequest(
+    val name: String,
+    val email: String,
+    val password: String
+)
+
 // ── User ────────────────────────────────────────────────────────────────────
 
 data class UserProfile(
@@ -42,6 +48,15 @@ data class Address(
 ) {
     fun formatted(): String = "$street, $number - $neighborhood, $city - $state, $zipCode"
 }
+
+data class ViaCepResponse(
+    @SerializedName("cep") val cep: String = "",
+    @SerializedName("logradouro") val street: String = "",
+    @SerializedName("bairro") val neighborhood: String = "",
+    @SerializedName("localidade") val city: String = "",
+    @SerializedName("uf") val state: String = "",
+    @SerializedName("erro") val error: Boolean = false
+)
 
 // ── Product ─────────────────────────────────────────────────────────────────
 
@@ -220,6 +235,7 @@ data class UpdateProfileRequest(
     val phone: String? = null,
     val birthDate: String? = null,
     val addressStreet: String? = null,
+    val addressNumber: String? = null,
     val addressCity: String? = null,
     val addressState: String? = null,
     val addressZip: String? = null

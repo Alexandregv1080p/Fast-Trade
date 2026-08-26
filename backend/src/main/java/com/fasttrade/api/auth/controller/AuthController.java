@@ -22,6 +22,11 @@ public class AuthController {
         return ResponseEntity.ok(authService.loginCustomer(req));
     }
 
+    @PostMapping("/auth/register")
+    public ResponseEntity<LoginResponse> register(@Valid @RequestBody RegisterRequest req) {
+        return ResponseEntity.ok(authService.registerCustomer(req));
+    }
+
     @PostMapping("/auth/recovery")
     public ResponseEntity<Map<String, String>> customerRecovery(@RequestBody RecoveryRequest req) {
         authService.sendRecovery(req.getEmail());

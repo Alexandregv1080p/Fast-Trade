@@ -96,13 +96,15 @@ fun ProfileScreen(
     if (showEditAddressDialog) {
         EditAddressDialog(
             currentStreet = profile?.address?.street ?: "",
+            currentNumber = profile?.address?.number ?: "",
             currentCity   = profile?.address?.city ?: "",
             currentState  = profile?.address?.state ?: "",
             currentZip    = profile?.address?.zipCode ?: "",
+            onLookupCep = viewModel::lookupCep,
             onDismiss = { showEditAddressDialog = false },
-            onConfirm = { street, city, state, zip ->
+            onConfirm = { street, number, city, state, zip ->
                 viewModel.updateProfileFields(
-                    UpdateProfileRequest(addressStreet = street, addressCity = city, addressState = state, addressZip = zip)
+                    UpdateProfileRequest(addressStreet = street, addressNumber = number, addressCity = city, addressState = state, addressZip = zip)
                 ) { ok -> if (ok) showEditAddressDialog = false }
             }
         )
@@ -376,57 +378,106 @@ private fun EditProfileDialog(
 @Composable
 private fun EditAddressDialog(
     currentStreet: String,
+    currentNumber: String,
     currentCity: String,
     currentState: String,
     currentZip: String,
+    onLookupCep: (String, (com.fasttrade.android.data.model.ViaCepResponse?) -> Unit) -> Unit,
     onDismiss: () -> Unit,
-    onConfirm: (street: String, city: String, state: String, zip: String) -> Unit
+    onConfirm: (street: String, number: String, city: String, state: String, zip: String) -> Unit
 ) {
     var street by remember { mutableStateOf(currentStreet) }
+    var number by remember { mutableStateOf(currentNumber) }
     var city   by remember { mutableStateOf(currentCity) }
     var state  by remember { mutableStateOf(currentState) }
     var zip    by remember { mutableStateOf(currentZip) }
+    var isLoadingCep by remember { mutableStateOf(false) }
+    var cepError by remember { mutableStateOf(false) }
+
+    val cepDigits = zip.filter { it.isDigit() }
+    LaunchedEffect(cepDigits) {
+        cepError = false
+        if (cepDigits.length == 8) {
+            isLoadingCep = true
+            onLookupCep(cepDigits) { result ->
+                isLoadingCep = false
+                if (result != null) {
+                    street = result.street
+                    city = result.city
+                    state = result.state
+                } else {
+                    cepError = true
+                }
+            }
+        }
+    }
 
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("Editar endereço") },
         text = {
+            val fieldShape = RoundedCornerShape(12.dp)
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                OutlinedTextField(
+                    value = zip,
+                    onValueChange = { if (it.filter { c -> c.isDigit() }.length <= 8) zip = it },
+                    label = { Text("CEP") },
+                    leadingIcon = { Icon(Icons.Default.LocationOn, contentDescription = null, tint = Primary) },
+                    trailingIcon = {
+                        if (isLoadingCep) {
+                            CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp, color = Primary)
+                        }
+                    },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    singleLine = true,
+                    isError = cepError,
+                    supportingText = { if (cepError) Text("CEP não encontrado") },
+                    shape = fieldShape,
+                    modifier = Modifier.fillMaxWidth()
+                )
                 OutlinedTextField(
                     value = street,
                     onValueChange = { street = it },
                     label = { Text("Rua / Logradouro") },
+                    leadingIcon = { Icon(Icons.Default.Home, contentDescription = null, tint = Primary) },
                     singleLine = true,
+                    shape = fieldShape,
                     modifier = Modifier.fillMaxWidth()
                 )
                 OutlinedTextField(
                     value = city,
                     onValueChange = { city = it },
                     label = { Text("Cidade") },
+                    leadingIcon = { Icon(Icons.Default.LocationCity, contentDescription = null, tint = Primary) },
                     singleLine = true,
+                    shape = fieldShape,
                     modifier = Modifier.fillMaxWidth()
                 )
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    OutlinedTextField(
+                        value = number,
+                        onValueChange = { number = it },
+                        label = { Text("Número") },
+                        leadingIcon = { Icon(Icons.Default.Numbers, contentDescription = null, tint = Primary) },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        singleLine = true,
+                        shape = fieldShape,
+                        modifier = Modifier.weight(1f)
+                    )
                     OutlinedTextField(
                         value = state,
                         onValueChange = { if (it.length <= 2) state = it.uppercase() },
                         label = { Text("UF") },
+                        leadingIcon = { Icon(Icons.Default.Map, contentDescription = null, tint = Primary) },
                         singleLine = true,
+                        shape = fieldShape,
                         modifier = Modifier.weight(1f)
-                    )
-                    OutlinedTextField(
-                        value = zip,
-                        onValueChange = { zip = it },
-                        label = { Text("CEP") },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        singleLine = true,
-                        modifier = Modifier.weight(2f)
                     )
                 }
             }
         },
         confirmButton = {
-            TextButton(onClick = { onConfirm(street, city, state, zip) }) {
+            TextButton(onClick = { onConfirm(street, number, city, state, zip) }) {
                 Text("Salvar", color = Primary)
             }
         },

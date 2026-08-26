@@ -1,0 +1,29 @@
+# Overrides para desenvolvimento local em kind / k3d / Docker Desktop.
+# Uso: helm install ft ./k8s/fast-trade -f ./k8s/fast-trade/values-local.yaml
+
+image:
+  registry: ""            # imagens carregadas direto no cluster, sem registry
+  repository: fast-trade
+  pullPolicy: Never       # usa somente o que foi feito load no cluster
+  tag: local
+
+backend:
+  replicaCount: 1
+  config:
+    LOG_LEVEL: DEBUG
+  podDisruptionBudget:
+    enabled: false        # PDB com 1 replica so atrapalha em local
+
+frontend:
+  replicaCount: 1
+  podDisruptionBudget:
+    enabled: false
+
+postgresql:
+  persistence:
+    size: 1Gi
+
+ingress:
+  enabled: true
+  className: nginx
+  host: fasttrade.local

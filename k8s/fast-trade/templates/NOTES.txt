@@ -1,0 +1,35 @@
+Fast Trade instalado como release "{{ .Release.Name }}" no namespace "{{ .Release.Namespace }}".
+
+Componentes:
+{{- if .Values.backend.enabled }}
+  - backend   {{ include "fast-trade.image" (dict "ctx" . "component" .Values.backend) }}
+{{- end }}
+{{- if .Values.frontend.enabled }}
+  - frontend  {{ include "fast-trade.image" (dict "ctx" . "component" .Values.frontend) }}
+{{- end }}
+{{- if .Values.postgresql.enabled }}
+  - postgres  {{ .Values.postgresql.image }} (StatefulSet{{ if .Values.postgresql.persistence.enabled }}, PVC de {{ .Values.postgresql.persistence.size }}{{ end }})
+{{- end }}
+
+Acompanhe o rollout:
+
+  kubectl -n {{ .Release.Namespace }} get pods -w
+
+{{ if .Values.ingress.enabled -}}
+Acesse pelo Ingress em http{{ if .Values.ingress.tls.enabled }}s{{ end }}://{{ .Values.ingress.host }}
+
+Adicione ao seu hosts (Windows: C:\Windows\System32\drivers\etc\hosts):
+
+  127.0.0.1  {{ .Values.ingress.host }}
+{{- else -}}
+Ingress desabilitado. Acesse via port-forward:
+
+  kubectl -n {{ .Release.Namespace }} port-forward svc/{{ include "fast-trade.fullname" . }}-{{ .Values.frontend.name }} 8080:{{ .Values.frontend.service.port }}
+  kubectl -n {{ .Release.Namespace }} port-forward svc/{{ include "fast-trade.fullname" . }}-{{ .Values.backend.name }} 8081:{{ .Values.backend.service.port }}
+{{- end }}
+
+{{ if eq .Values.jwt.secret "4f6e8b2c9d1a7e3f5g2h8i4j6k0l2m9n1o3p5q7r2s4t6u8v0w2x4y6z8a1b3c5" -}}
+AVISO: voce esta usando o jwt.secret padrao do chart. Para qualquer ambiente real:
+
+  helm upgrade {{ .Release.Name }} ./k8s/fast-trade --set jwt.secret="$(openssl rand -base64 64)"
+{{- end }}

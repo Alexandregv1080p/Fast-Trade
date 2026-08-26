@@ -1,6 +1,7 @@
 package com.fasttrade.android.data.repository
 
 import com.fasttrade.android.data.api.FastTradeApi
+import com.fasttrade.android.data.api.ViaCepApi
 import com.fasttrade.android.data.local.TokenManager
 import com.fasttrade.android.data.model.*
 import javax.inject.Inject
@@ -15,6 +16,7 @@ sealed class Result<out T> {
 @Singleton
 class AppRepository @Inject constructor(
     private val api: FastTradeApi,
+    private val viaCepApi: ViaCepApi,
     private val tokenManager: TokenManager
 ) {
     // ── Auth ────────────────────────────────────────────────────────────────
@@ -26,6 +28,18 @@ class AppRepository @Inject constructor(
             tokenManager.saveSession(body.token, body.name, body.email, body.role)
             Result.Success(body)
         } else Result.Error(r.message(), r.code())
+    }
+
+    suspend fun register(name: String, email: String, password: String): Result<LoginResponse> = safeCall {
+        val r = api.register(RegisterRequest(name, email, password))
+        if (r.isSuccessful) {
+            val body = r.body()!!
+            tokenManager.saveSession(body.token, body.name, body.email, body.role)
+            Result.Success(body)
+        } else Result.Error(
+            if (r.code() == 409) "E-mail já cadastrado" else r.message(),
+            r.code()
+        )
     }
 
     suspend fun logout() { tokenManager.clearSession() }
@@ -183,6 +197,14 @@ class AppRepository @Inject constructor(
         val r = api.getChatHistory(room)
         if (r.isSuccessful) Result.Success(r.body() ?: emptyList())
         else Result.Error(r.message(), r.code())
+    }
+
+    // ── CEP ─────────────────────────────────────────────────────────────────
+
+    suspend fun lookupCep(cep: String): Result<ViaCepResponse> = safeCall {
+        val r = viaCepApi.getAddress(cep)
+        if (r.isSuccessful && r.body() != null && !r.body()!!.error) Result.Success(r.body()!!)
+        else Result.Error("CEP não encontrado")
     }
 
     // ── Helpers ─────────────────────────────────────────────────────────────

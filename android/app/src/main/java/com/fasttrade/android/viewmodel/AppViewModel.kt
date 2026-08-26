@@ -31,6 +31,27 @@ class AppViewModel @Inject constructor(
     private val _forgotPasswordSuccess = MutableStateFlow(false)
     val forgotPasswordSuccess: StateFlow<Boolean> = _forgotPasswordSuccess
 
+    private val _registerLoading = MutableStateFlow(false)
+    val registerLoading: StateFlow<Boolean> = _registerLoading
+
+    private val _registerError = MutableStateFlow<String?>(null)
+    val registerError: StateFlow<String?> = _registerError
+
+    fun register(name: String, email: String, password: String, onSuccess: () -> Unit) {
+        viewModelScope.launch {
+            _registerLoading.value = true
+            _registerError.value = null
+            when (val result = repo.register(name.trim(), email.trim(), password.trim())) {
+                is Result.Success -> onSuccess()
+                is Result.Error   -> _registerError.value = result.message
+                else              -> Unit
+            }
+            _registerLoading.value = false
+        }
+    }
+
+    fun clearRegisterError() { _registerError.value = null }
+
     fun login(email: String, password: String, onSuccess: () -> Unit) {
         viewModelScope.launch {
             _loginLoading.value = true
@@ -83,6 +104,15 @@ class AppViewModel @Inject constructor(
             when (val r = repo.updateProfileFields(request)) {
                 is Result.Success -> { _profile.value = r.data; onDone(true) }
                 else              -> onDone(false)
+            }
+        }
+    }
+
+    fun lookupCep(cep: String, onResult: (com.fasttrade.android.data.model.ViaCepResponse?) -> Unit) {
+        viewModelScope.launch {
+            when (val r = repo.lookupCep(cep)) {
+                is Result.Success -> onResult(r.data)
+                else              -> onResult(null)
             }
         }
     }

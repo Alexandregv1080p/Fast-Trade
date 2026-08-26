@@ -31,6 +31,7 @@ import com.fasttrade.android.viewmodel.AppViewModel
 fun LoginScreen(
     onLoginSuccess: () -> Unit,
     onForgotPassword: () -> Unit,
+    onRegister: () -> Unit,
     viewModel: AppViewModel = hiltViewModel()
 ) {
     var email by remember { mutableStateOf("") }
@@ -154,7 +155,7 @@ fun LoginScreen(
                     color = Primary,
                     fontWeight = FontWeight.Bold,
                     style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.clickable { /* TODO: navigate to register */ }
+                    modifier = Modifier.clickable(onClick = onRegister)
                 )
             }
 
@@ -222,5 +223,92 @@ fun ForgotPasswordScreen(
                 enabled = email.isNotBlank()
             )
         }
+    }
+}
+
+@Composable
+fun RegisterScreen(
+    onRegisterSuccess: () -> Unit,
+    onBack: () -> Unit,
+    viewModel: AppViewModel = hiltViewModel()
+) {
+    var name by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    var passwordVisible by remember { mutableStateOf(false) }
+
+    val isLoading by viewModel.registerLoading.collectAsState()
+    val errorMsg by viewModel.registerError.collectAsState()
+
+    LaunchedEffect(name, email, password) { viewModel.clearRegisterError() }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.White)
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        FtTopBar(title = "CRIAR CONTA", onBack = onBack)
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        FtTextField(
+            value = name,
+            onValueChange = { name = it },
+            label = "Nome",
+            imeAction = ImeAction.Next
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        FtTextField(
+            value = email,
+            onValueChange = { email = it },
+            label = "E-mail",
+            keyboardType = KeyboardType.Email,
+            imeAction = ImeAction.Next
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        FtTextField(
+            value = password,
+            onValueChange = { password = it },
+            label = "Senha",
+            isPassword = !passwordVisible,
+            imeAction = ImeAction.Done,
+            onImeAction = {
+                if (name.isNotBlank() && email.isNotBlank() && password.isNotBlank() && !isLoading) {
+                    viewModel.register(name, email, password, onSuccess = onRegisterSuccess)
+                }
+            },
+            trailingIcon = {
+                IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                    Icon(
+                        imageVector = if (passwordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                        contentDescription = null,
+                        tint = TextSecondary
+                    )
+                }
+            }
+        )
+
+        if (errorMsg != null) {
+            Spacer(modifier = Modifier.height(8.dp))
+            ErrorMessage(message = errorMsg ?: "Não foi possível criar a conta")
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        FtButton(
+            text = "Criar conta",
+            onClick = { viewModel.register(name, email, password, onSuccess = onRegisterSuccess) },
+            loading = isLoading,
+            enabled = name.isNotBlank() && email.isNotBlank() && password.length >= 6
+        )
+
+        Spacer(modifier = Modifier.height(32.dp))
     }
 }

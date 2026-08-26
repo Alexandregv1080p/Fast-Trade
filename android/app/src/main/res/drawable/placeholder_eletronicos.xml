@@ -7,7 +7,7 @@
     <!-- Background -->
     <path android:fillColor="#FFF8E1" android:pathData="M0,0h160v160H0z"/>
     <!-- Phone body -->
-    <path android:fillColor="#B8860B"
+    <path android:fillColor="#1B7A3B"
         android:pathData="M68,30 L92,30 Q96,30 96,34 L96,126 Q96,130 92,130 L68,130 Q64,130 64,126 L64,34 Q64,30 68,30 Z"/>
     <!-- Screen -->
     <path android:fillColor="#FFF8E1"
@@ -19,7 +19,7 @@
     <path android:fillColor="#FFF8E1"
         android:pathData="M80,34 m-2,0 a2,2 0 1,0 4,0 a2,2 0 1,0 -4,0"/>
     <!-- Screen content lines -->
-    <path android:fillColor="#D4AF37" android:pathData="M72,50 L88,50 Q89,50 89,51 L89,53 Q89,54 88,54 L72,54 Q71,54 71,53 L71,51 Q71,50 72,50 Z"/>
-    <path android:fillColor="#D4AF37" android:alpha="0.6" android:pathData="M72,58 L84,58 L84,60 L72,60 Z"/>
-    <path android:fillColor="#D4AF37" android:alpha="0.4" android:pathData="M72,64 L80,64 L80,66 L72,66 Z"/>
+    <path android:fillColor="#2E9E4F" android:pathData="M72,50 L88,50 Q89,50 89,51 L89,53 Q89,54 88,54 L72,54 Q71,54 71,53 L71,51 Q71,50 72,50 Z"/>
+    <path android:fillColor="#2E9E4F" android:alpha="0.6" android:pathData="M72,58 L84,58 L84,60 L72,60 Z"/>
+    <path android:fillColor="#2E9E4F" android:alpha="0.4" android:pathData="M72,64 L80,64 L80,66 L72,66 Z"/>
 </vector>

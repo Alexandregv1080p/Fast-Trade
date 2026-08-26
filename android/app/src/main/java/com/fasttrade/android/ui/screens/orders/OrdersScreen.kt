@@ -30,7 +30,9 @@ fun OrdersScreen(
     val orders by viewModel.orders.collectAsState()
     val isLoading by viewModel.ordersLoading.collectAsState()
 
-    // filter state: null = Todos, "COMPRA" = Compras, "VENDA" = Vendas
+    // type state: null = Todos, "COMPRA" = Compras, "VENDA" = Vendas
+    var selectedType by remember { mutableStateOf<String?>(null) }
+    // status state: null = Todos, "PENDING" | "SEPARATING" | "DELIVERED"
     var selectedFilter by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(Unit) { viewModel.loadOrders() }
@@ -38,10 +40,16 @@ fun OrdersScreen(
     val compras = orders.filter { it.status !in listOf("CANCELLED") }
     val vendas  = emptyList<Order>() // buyer-only app; vendas would come from a different endpoint
 
-    val filtered = when (selectedFilter) {
+    val baseList = when (selectedType) {
         "COMPRA" -> compras
         "VENDA"  -> vendas
         else     -> orders
+    }
+
+    val filtered = if (selectedFilter == null) {
+        baseList
+    } else {
+        baseList.filter { it.status.equals(selectedFilter, ignoreCase = true) }
     }
 
     Column(
@@ -152,14 +160,14 @@ fun OrdersScreen(
                     NavCard(
                         title = "Compras",
                         subtitle = "Clique aqui para ser direcionado(a) aos pedidos de compra",
-                        onClick = { selectedFilter = if (selectedFilter == "COMPRA") null else "COMPRA" },
-                        isSelected = selectedFilter == "COMPRA"
+                        onClick = { selectedType = if (selectedType == "COMPRA") null else "COMPRA" },
+                        isSelected = selectedType == "COMPRA"
                     )
                     NavCard(
                         title = "Vendas",
                         subtitle = "Clique aqui para ser direcionado(a) aos pedidos de venda",
-                        onClick = { selectedFilter = if (selectedFilter == "VENDA") null else "VENDA" },
-                        isSelected = selectedFilter == "VENDA"
+                        onClick = { selectedType = if (selectedType == "VENDA") null else "VENDA" },
+                        isSelected = selectedType == "VENDA"
                     )
                 }
                 Spacer(modifier = Modifier.height(16.dp))

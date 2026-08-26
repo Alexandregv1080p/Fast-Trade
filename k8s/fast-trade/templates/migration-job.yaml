@@ -1,0 +1,110 @@
+{{- if .Values.migrations.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "fast-trade.fullname" . }}-migrate
+  labels:
+    {{- include "fast-trade.labels" . | nindent 4 }}
+    app.kubernetes.io/component: migration
+  annotations:
+    # post-install : na primeira instalacao o Postgres ja subiu e esta Ready
+    # pre-upgrade  : em upgrades o schema migra ANTES dos pods novos rolarem
+    "helm.sh/hook": post-install,pre-upgrade
+    "helm.sh/hook-weight": "0"
+    # Remove o Job da execucao anterior antes de criar o novo (nomes fixos
+    # colidiriam). Mantem o Job apos rodar, para `kubectl logs` post-mortem.
+    "helm.sh/hook-delete-policy": before-hook-creation
+spec:
+  backoffLimit: {{ .Values.migrations.backoffLimit }}
+  # Limpa o Job automaticamente algum tempo depois de concluir
+  ttlSecondsAfterFinished: {{ .Values.migrations.ttlSecondsAfterFinished }}
+  template:
+    metadata:
+      labels:
+        {{- include "fast-trade.labels" . | nindent 8 }}
+        app.kubernetes.io/component: migration
+    spec:
+      restartPolicy: Never
+      serviceAccountName: {{ include "fast-trade.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      initContainers:
+        # 1) Espera o banco aceitar conexao
+        {{- if .Values.postgresql.enabled }}
+        - name: wait-for-db
+          image: {{ .Values.postgresql.image }}
+          command:
+            - sh
+            - -c
+            - |
+              until pg_isready -h {{ include "fast-trade.dbHost" . }} -p {{ include "fast-trade.dbPort" . }}; do
+                echo "aguardando postgres..."
+                sleep 2
+              done
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsUser: 999
+            capabilities:
+              drop: ["ALL"]
+        {{- end }}
+        # 2) Extrai os SQLs da imagem da API para um volume compartilhado.
+        #    Assim o Flyway roda exatamente as migrations daquela tag.
+        - name: copy-migrations
+          image: {{ include "fast-trade.image" (dict "ctx" . "component" .Values.backend) }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["sh", "-c", "cp -v /migrations/*.sql /sql/"]
+          volumeMounts:
+            - name: sql
+              mountPath: /sql
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+      containers:
+        - name: flyway
+          image: {{ .Values.migrations.image }}
+          args:
+            - -url=jdbc:postgresql://{{ include "fast-trade.dbHost" . }}:{{ include "fast-trade.dbPort" . }}/{{ include "fast-trade.dbName" . }}
+            - -locations=filesystem:/flyway/sql
+            - -baselineOnMigrate=true
+            - -baselineVersion=0
+            - -connectRetries={{ .Values.migrations.connectRetries }}
+            - migrate
+          env:
+            # O Flyway CLI le usuario e senha destas variaveis
+            - name: FLYWAY_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "fast-trade.dbSecretName" . }}
+                  key: username
+            - name: FLYWAY_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "fast-trade.dbSecretName" . }}
+                  key: password
+          volumeMounts:
+            - name: sql
+              mountPath: /flyway/sql
+          resources:
+            {{- toYaml .Values.migrations.resources | nindent 12 }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+      volumes:
+        - name: sql
+          emptyDir: {}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end }}

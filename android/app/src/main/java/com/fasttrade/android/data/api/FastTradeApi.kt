@@ -12,6 +12,9 @@ interface FastTradeApi {
     @POST("auth/login")
     suspend fun login(@Body request: LoginRequest): Response<LoginResponse>
 
+    @POST("auth/register")
+    suspend fun register(@Body request: RegisterRequest): Response<LoginResponse>
+
     @POST("auth/forgot-password")
     suspend fun forgotPassword(@Body request: ForgotPasswordRequest): Response<MessageResponse>
 

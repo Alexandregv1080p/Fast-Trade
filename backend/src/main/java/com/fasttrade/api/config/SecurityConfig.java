@@ -37,7 +37,10 @@ public class SecurityConfig {
                     "/api/chat/support/**",
                     "/api/chat/history/support-*",
                     "/ws/**",
-                    "/error"
+                    "/error",
+                    // Probes de liveness/readiness do Kubernetes
+                    "/actuator/health",
+                    "/actuator/health/**"
                 ).permitAll()
                 .anyRequest().authenticated()
             )

@@ -59,6 +59,7 @@ fun CartScreen(
             currentCity   = addr?.city ?: "",
             currentState  = addr?.state ?: "",
             currentZip    = addr?.zipCode ?: "",
+            onLookupCep = viewModel::lookupCep,
             onDismiss = { showAddressDialog = false },
             onConfirm = { street, city, state, zip ->
                 viewModel.updateCartAddress(street, city, state, zip) { showAddressDialog = false }
@@ -465,6 +466,7 @@ private fun ChangeAddressDialog(
     currentCity: String,
     currentState: String,
     currentZip: String,
+    onLookupCep: (String, (com.fasttrade.android.data.model.ViaCepResponse?) -> Unit) -> Unit,
     onDismiss: () -> Unit,
     onConfirm: (street: String, city: String, state: String, zip: String) -> Unit
 ) {
@@ -472,12 +474,47 @@ private fun ChangeAddressDialog(
     var city   by remember { mutableStateOf(currentCity) }
     var state  by remember { mutableStateOf(currentState) }
     var zip    by remember { mutableStateOf(currentZip) }
+    var isLoadingCep by remember { mutableStateOf(false) }
+    var cepError by remember { mutableStateOf(false) }
+
+    val cepDigits = zip.filter { it.isDigit() }
+    LaunchedEffect(cepDigits) {
+        cepError = false
+        if (cepDigits.length == 8) {
+            isLoadingCep = true
+            onLookupCep(cepDigits) { result ->
+                isLoadingCep = false
+                if (result != null) {
+                    street = result.street
+                    city = result.city
+                    state = result.state
+                } else {
+                    cepError = true
+                }
+            }
+        }
+    }
 
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("Endereço de entrega") },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                OutlinedTextField(
+                    value = zip,
+                    onValueChange = { if (it.filter { c -> c.isDigit() }.length <= 8) zip = it },
+                    label = { Text("CEP") },
+                    trailingIcon = {
+                        if (isLoadingCep) {
+                            CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp, color = Primary)
+                        }
+                    },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    singleLine = true,
+                    isError = cepError,
+                    supportingText = { if (cepError) Text("CEP não encontrado") },
+                    modifier = Modifier.fillMaxWidth()
+                )
                 OutlinedTextField(
                     value = street,
                     onValueChange = { street = it },
@@ -492,23 +529,13 @@ private fun ChangeAddressDialog(
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedTextField(
-                        value = state,
-                        onValueChange = { if (it.length <= 2) state = it.uppercase() },
-                        label = { Text("UF") },
-                        singleLine = true,
-                        modifier = Modifier.weight(1f)
-                    )
-                    OutlinedTextField(
-                        value = zip,
-                        onValueChange = { zip = it },
-                        label = { Text("CEP") },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        singleLine = true,
-                        modifier = Modifier.weight(2f)
-                    )
-                }
+                OutlinedTextField(
+                    value = state,
+                    onValueChange = { if (it.length <= 2) state = it.uppercase() },
+                    label = { Text("UF") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
         },
         confirmButton = {

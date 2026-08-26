@@ -14,6 +14,7 @@ import androidx.navigation.compose.*
 import androidx.navigation.navArgument
 import com.fasttrade.android.ui.screens.auth.ForgotPasswordScreen
 import com.fasttrade.android.ui.screens.auth.LoginScreen
+import com.fasttrade.android.ui.screens.auth.RegisterScreen
 import com.fasttrade.android.ui.screens.cart.CartScreen
 import com.fasttrade.android.ui.screens.home.HomeScreen
 import com.fasttrade.android.ui.screens.onboarding.OnboardingScreen
@@ -40,6 +41,7 @@ object Routes {
     const val SPLASH         = "splash"
     const val ONBOARDING     = "onboarding"
     const val LOGIN          = "login"
+    const val REGISTER       = "register"
     const val FORGOT_PW      = "forgot_password"
 
     // Bottom nav roots
@@ -188,7 +190,19 @@ fun AppNavigation(viewModel: AppViewModel = hiltViewModel()) {
                             popUpTo(Routes.LOGIN) { inclusive = true }
                         }
                     },
-                    onForgotPassword = { navController.navigate(Routes.FORGOT_PW) }
+                    onForgotPassword = { navController.navigate(Routes.FORGOT_PW) },
+                    onRegister = { navController.navigate(Routes.REGISTER) }
+                )
+            }
+
+            composable(Routes.REGISTER) {
+                RegisterScreen(
+                    onRegisterSuccess = {
+                        navController.navigate(Routes.HOME) {
+                            popUpTo(Routes.LOGIN) { inclusive = true }
+                        }
+                    },
+                    onBack = { navController.popBackStack() }
                 )
             }
 

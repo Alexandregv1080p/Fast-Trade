@@ -69,7 +69,7 @@ fun HomeScreen(
     val staticBanners = listOf(
         BannerItem("🔥 Ofertas do dia",      "Produtos com até 40% off",      Primary,               null),
         BannerItem("🆕 Novidades",           "Chegaram produtos novos",        Color(0xFF1B3A2A),     null),
-        BannerItem("⭐ Selecionados p/ você","Baseado no seu perfil",          Color(0xFF4A3000),     null)
+        BannerItem("⭐ Selecionados p/ você","Baseado no seu perfil",          Color(0xFF14432A),     null)
     )
     val bannerItems = if (featured.isEmpty()) staticBanners
                      else featured.map { p ->

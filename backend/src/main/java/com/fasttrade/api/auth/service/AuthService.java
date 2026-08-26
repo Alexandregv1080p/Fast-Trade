@@ -5,6 +5,7 @@ import com.fasttrade.api.admin.repository.AdminUserRepository;
 import com.fasttrade.api.auth.dto.CustomerLoginRequest;
 import com.fasttrade.api.auth.dto.LoginRequest;
 import com.fasttrade.api.auth.dto.LoginResponse;
+import com.fasttrade.api.auth.dto.RegisterRequest;
 import com.fasttrade.api.security.JwtUtil;
 import com.fasttrade.api.user.entity.User;
 import com.fasttrade.api.user.repository.UserRepository;
@@ -18,6 +19,7 @@ import java.util.UUID;
 import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.http.HttpStatus.FORBIDDEN;
+import static org.springframework.http.HttpStatus.CONFLICT;
 
 @Service
 @RequiredArgsConstructor
@@ -39,6 +41,21 @@ public class AuthService {
         if (!passwordEncoder.matches(req.getPassword(), user.getPassword())) {
             throw new ResponseStatusException(UNAUTHORIZED, "Credenciais inválidas");
         }
+
+        String token = jwtUtil.generate(user.getEmail(), "CUSTOMER");
+        return new LoginResponse(token, user.getId(), user.getName(), user.getEmail(), "CUSTOMER");
+    }
+
+    public LoginResponse registerCustomer(RegisterRequest req) {
+        if (userRepo.findByEmail(req.getEmail()).isPresent()) {
+            throw new ResponseStatusException(CONFLICT, "E-mail já cadastrado");
+        }
+
+        User user = new User();
+        user.setName(req.getName());
+        user.setEmail(req.getEmail());
+        user.setPassword(passwordEncoder.encode(req.getPassword()));
+        userRepo.save(user);
 
         String token = jwtUtil.generate(user.getEmail(), "CUSTOMER");
         return new LoginResponse(token, user.getId(), user.getName(), user.getEmail(), "CUSTOMER");
