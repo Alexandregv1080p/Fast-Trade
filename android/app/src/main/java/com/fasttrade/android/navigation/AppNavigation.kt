@@ -16,6 +16,7 @@ import com.fasttrade.android.ui.screens.auth.ForgotPasswordScreen
 import com.fasttrade.android.ui.screens.auth.LoginScreen
 import com.fasttrade.android.ui.screens.auth.RegisterScreen
 import com.fasttrade.android.ui.screens.cart.CartScreen
+import com.fasttrade.android.ui.screens.cart.CheckoutScreen
 import com.fasttrade.android.ui.screens.home.HomeScreen
 import com.fasttrade.android.ui.screens.onboarding.OnboardingScreen
 import com.fasttrade.android.ui.screens.orders.OrderDetailScreen
@@ -47,6 +48,7 @@ object Routes {
     // Bottom nav roots
     const val HOME           = "home"
     const val CART           = "cart"
+    const val CHECKOUT       = "checkout"
     const val ORDERS         = "orders"
     const val CONVERSATIONS  = "conversations"
     const val PROFILE        = "profile"
@@ -227,17 +229,27 @@ fun AppNavigation(viewModel: AppViewModel = hiltViewModel()) {
                     productId = productId,
                     onBack = { navController.popBackStack() },
                     onAddedToCart = { navController.navigate(Routes.CART) },
+                    onOpenCart = { navController.navigate(Routes.CART) },
                     onSellerClick = { sellerId -> navController.navigate(Routes.sellerProfile(sellerId)) }
                 )
             }
 
             composable(Routes.CART) {
                 CartScreen(
+                    onCheckout = { navController.navigate(Routes.CHECKOUT) },
+                    viewModel = viewModel
+                )
+            }
+
+            composable(Routes.CHECKOUT) {
+                CheckoutScreen(
+                    onBack = { navController.popBackStack() },
                     onOrderPlaced = { orderId ->
                         navController.navigate(Routes.orderDetail(orderId)) {
                             popUpTo(Routes.CART) { inclusive = false }
                         }
-                    }
+                    },
+                    viewModel = viewModel
                 )
             }
 

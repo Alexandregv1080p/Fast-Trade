@@ -41,12 +41,17 @@ data class Address(
     val id: Long = 0,
     val street: String = "",
     val number: String = "",
+    val complement: String = "",
     val neighborhood: String = "",
     val city: String = "",
     val state: String = "",
     val zipCode: String = ""
 ) {
-    fun formatted(): String = "$street, $number - $neighborhood, $city - $state, $zipCode"
+    fun formatted(): String = buildString {
+        append("$street, $number")
+        if (complement.isNotBlank()) append(" ($complement)")
+        append(" - $neighborhood, $city - $state, $zipCode")
+    }
 }
 
 data class ViaCepResponse(

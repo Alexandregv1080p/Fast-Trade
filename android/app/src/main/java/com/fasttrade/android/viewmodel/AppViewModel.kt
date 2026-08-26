@@ -204,11 +204,40 @@ class AppViewModel @Inject constructor(
         .map { it?.items?.sumOf { item -> item.quantity } ?: 0 }
         .stateIn(viewModelScope, SharingStarted.Eagerly, 0)
 
+    private val _appliedCoupon = MutableStateFlow<String?>(null)
+    val appliedCoupon: StateFlow<String?> = _appliedCoupon
+
+    // ponytail: coupons resolved client-side; move to a backend /cart/coupon endpoint when one exists
+    private fun couponDiscount(code: String, cart: Cart): Double? = when (code.trim().uppercase()) {
+        "FRETEGRATIS" -> cart.deliveryFee
+        "FAST10"      -> cart.subtotal * 0.10
+        "BEMVINDO"    -> minOf(50.0, cart.subtotal)
+        else          -> null
+    }
+
+    fun applyCoupon(code: String, onResult: (Boolean, String) -> Unit) {
+        val cart = _cart.value ?: return onResult(false, "Carrinho vazio")
+        val discount = couponDiscount(code, cart)
+            ?: return onResult(false, "Cupom inválido")
+        _appliedCoupon.value = code.trim().uppercase()
+        _cart.value = cart.copy(discount = discount)
+        onResult(true, "Cupom aplicado!")
+    }
+
+    fun removeCoupon() {
+        _appliedCoupon.value = null
+        _cart.value = _cart.value?.copy(discount = 0.0)
+    }
+
     fun loadCart() {
         viewModelScope.launch {
             _cartLoading.value = true
             when (val r = repo.getCart()) {
-                is Result.Success -> _cart.value = r.data
+                is Result.Success -> {
+                    val code = _appliedCoupon.value
+                    val discount = code?.let { couponDiscount(it, r.data) } ?: 0.0
+                    _cart.value = r.data.copy(discount = discount)
+                }
                 else              -> Unit
             }
             _cartLoading.value = false
@@ -260,9 +289,9 @@ class AppViewModel @Inject constructor(
         }
     }
 
-    fun updateCartAddress(street: String, city: String, state: String, zip: String, onDone: () -> Unit = {}) {
+    fun updateCartAddress(street: String, number: String, complement: String, city: String, state: String, zip: String, onDone: () -> Unit = {}) {
         viewModelScope.launch {
-            when (val r = repo.updateCartAddress(street, city, state, zip)) {
+            when (val r = repo.updateCartAddress(street, number, complement, city, state, zip)) {
                 is Result.Success -> { _cart.value = r.data; onDone() }
                 else              -> onDone()
             }

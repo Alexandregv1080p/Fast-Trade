@@ -125,8 +125,11 @@ class AppRepository @Inject constructor(
         else Result.Error(r.message(), r.code())
     }
 
-    suspend fun updateCartAddress(street: String, city: String, state: String, zip: String): Result<Cart> = safeCall {
-        val r = api.updateCartAddress(mapOf("street" to street, "city" to city, "state" to state, "zip" to zip))
+    suspend fun updateCartAddress(street: String, number: String, complement: String, city: String, state: String, zip: String): Result<Cart> = safeCall {
+        val r = api.updateCartAddress(mapOf(
+            "street" to street, "number" to number, "complement" to complement,
+            "city" to city, "state" to state, "zip" to zip
+        ))
         if (r.isSuccessful) Result.Success(r.body()!!)
         else Result.Error(r.message(), r.code())
     }

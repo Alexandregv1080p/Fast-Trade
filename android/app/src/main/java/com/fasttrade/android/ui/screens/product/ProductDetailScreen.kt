@@ -39,6 +39,7 @@ fun ProductDetailScreen(
     productId: Long,
     onBack: () -> Unit,
     onAddedToCart: () -> Unit,
+    onOpenCart: () -> Unit = {},
     onSellerClick: (Long) -> Unit = {},
     viewModel: AppViewModel = hiltViewModel()
 ) {
@@ -275,29 +276,44 @@ fun ProductDetailScreen(
                                 .size(52.dp)
                                 .clip(CircleShape)
                                 .background(Primary)
-                                .clickable {
-                                    addingToCart = true
-                                    viewModel.addToCart(p.id, 1) {
-                                        addingToCart = false
-                                        onAddedToCart()
-                                    }
-                                },
+                                .clickable { onOpenCart() },
                             contentAlignment = Alignment.Center
                         ) {
-                            if (addingToCart) {
-                                CircularProgressIndicator(
-                                    modifier = Modifier.size(24.dp),
-                                    color = Color.White,
-                                    strokeWidth = 2.dp
-                                )
-                            } else {
-                                Icon(
-                                    Icons.Default.ShoppingCart,
-                                    contentDescription = "Adicionar ao carrinho",
-                                    tint = Color.White,
-                                    modifier = Modifier.size(24.dp)
-                                )
+                            Icon(
+                                Icons.Default.ShoppingCart,
+                                contentDescription = "Abrir carrinho",
+                                tint = Color.White,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // ── Botão adicionar ao carrinho ──────────────────────────
+                    Button(
+                        onClick = {
+                            addingToCart = true
+                            viewModel.addToCart(p.id, 1) {
+                                addingToCart = false
+                                onAddedToCart()
                             }
+                        },
+                        enabled = !addingToCart,
+                        modifier = Modifier.fillMaxWidth().height(50.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Primary)
+                    ) {
+                        if (addingToCart) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(22.dp),
+                                color = Color.White,
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Icon(Icons.Default.ShoppingCart, contentDescription = null, modifier = Modifier.size(20.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Adicionar ao carrinho", fontWeight = FontWeight.Bold)
                         }
                     }
 

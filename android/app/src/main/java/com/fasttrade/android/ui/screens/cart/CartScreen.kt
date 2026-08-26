@@ -1,8 +1,5 @@
 package com.fasttrade.android.ui.screens.cart
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -19,7 +16,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -34,20 +30,13 @@ import com.fasttrade.android.viewmodel.AppViewModel
 
 @Composable
 fun CartScreen(
-    onOrderPlaced: (Long) -> Unit,
+    onCheckout: () -> Unit,
     viewModel: AppViewModel = hiltViewModel()
 ) {
     val cart by viewModel.cart.collectAsState()
     val isLoading by viewModel.cartLoading.collectAsState()
-    var placingOrder      by remember { mutableStateOf(false) }
+    val appliedCoupon by viewModel.appliedCoupon.collectAsState()
     var showAddressDialog by remember { mutableStateOf(false) }
-    var orderError        by remember { mutableStateOf<String?>(null) }
-    var selectedPayment   by remember { mutableStateOf("PIX") }
-    // Card fields (only used when selectedPayment == "CREDIT_CARD")
-    var cardNumber   by remember { mutableStateOf("") }
-    var cardHolder   by remember { mutableStateOf("") }
-    var cardExpiry   by remember { mutableStateOf("") }
-    var cardCvv      by remember { mutableStateOf("") }
 
     LaunchedEffect(Unit) { viewModel.loadCart() }
 
@@ -55,14 +44,16 @@ fun CartScreen(
     if (showAddressDialog) {
         val addr = cart?.deliveryAddress
         ChangeAddressDialog(
-            currentStreet = addr?.street ?: "",
-            currentCity   = addr?.city ?: "",
-            currentState  = addr?.state ?: "",
-            currentZip    = addr?.zipCode ?: "",
+            currentStreet     = addr?.street ?: "",
+            currentNumber     = addr?.number ?: "",
+            currentComplement = addr?.complement ?: "",
+            currentCity       = addr?.city ?: "",
+            currentState      = addr?.state ?: "",
+            currentZip        = addr?.zipCode ?: "",
             onLookupCep = viewModel::lookupCep,
             onDismiss = { showAddressDialog = false },
-            onConfirm = { street, city, state, zip ->
-                viewModel.updateCartAddress(street, city, state, zip) { showAddressDialog = false }
+            onConfirm = { street, number, complement, city, state, zip ->
+                viewModel.updateCartAddress(street, number, complement, city, state, zip) { showAddressDialog = false }
             }
         )
     }
@@ -198,6 +189,15 @@ fun CartScreen(
                         )
                     }
 
+                    // Coupon
+                    item {
+                        CouponField(
+                            applied = appliedCoupon,
+                            onApply = { code, cb -> viewModel.applyCoupon(code, cb) },
+                            onRemove = { viewModel.removeCoupon() }
+                        )
+                    }
+
                     // Summary
                     item {
                         FtDivider()
@@ -215,57 +215,15 @@ fun CartScreen(
                         }
                     }
 
-                    // Payment method
-                    item {
-                        PaymentMethodSelector(
-                            selected = selectedPayment,
-                            onSelect = { selectedPayment = it },
-                            cardNumber = cardNumber, onCardNumber = { cardNumber = it },
-                            cardHolder = cardHolder, onCardHolder = { cardHolder = it },
-                            cardExpiry = cardExpiry, onCardExpiry = { cardExpiry = it },
-                            cardCvv    = cardCvv,    onCardCvv    = { cardCvv = it }
-                        )
-                    }
-
-                    // Error message
-                    if (orderError != null) {
-                        item {
-                            Card(
-                                shape = RoundedCornerShape(8.dp),
-                                colors = CardDefaults.cardColors(containerColor = Error.copy(alpha = 0.1f))
-                            ) {
-                                Row(
-                                    modifier = Modifier.padding(12.dp),
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Icon(Icons.Default.ErrorOutline, contentDescription = null, tint = Error, modifier = Modifier.size(18.dp))
-                                    Text(orderError!!, style = MaterialTheme.typography.bodySmall, color = Error)
-                                }
-                            }
-                        }
-                    }
-
                     item { Spacer(modifier = Modifier.height(16.dp)) }
                 }
 
-                // Finalize button
+                // Continue to payment
                 Surface(shadowElevation = 8.dp, color = Color.White) {
                     Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp)) {
                         FtButton(
-                            text = if (placingOrder) "Processando..." else "Finalizar Pedido  •  R$${String.format("%.2f", c.total)}",
-                            onClick = {
-                                if (!placingOrder) {
-                                    placingOrder = true
-                                    orderError = null
-                                    viewModel.placeOrder(selectedPayment) { success, orderId ->
-                                        placingOrder = false
-                                        if (success) onOrderPlaced(orderId)
-                                        else orderError = "Não foi possível finalizar o pedido. Tente novamente."
-                                    }
-                                }
-                            },
-                            loading = placingOrder
+                            text = "Ir para pagamento  •  R$${String.format("%.2f", c.total)}",
+                            onClick = onCheckout
                         )
                     }
                 }
@@ -274,185 +232,73 @@ fun CartScreen(
     }
 }
 
-// ─── Payment Method Selector ──────────────────────────────────────────────────
-
-private data class PaymentOption(
-    val key: String,
-    val label: String,
-    val subtitle: String,
-    val icon: ImageVector
-)
-
-private val paymentOptions = listOf(
-    PaymentOption("PIX",           "PIX",                  "Aprovação instantânea",              Icons.Default.QrCode),
-    PaymentOption("CREDIT_CARD",   "Cartão de Crédito",    "Até 12x sem juros",                  Icons.Default.CreditCard),
-    PaymentOption("BOLETO",        "Boleto Bancário",       "Vence em 3 dias úteis",              Icons.Default.Receipt)
-)
+// ─── Coupon Field ─────────────────────────────────────────────────────────────
 
 @Composable
-private fun PaymentMethodSelector(
-    selected: String,
-    onSelect: (String) -> Unit,
-    cardNumber: String, onCardNumber: (String) -> Unit,
-    cardHolder: String, onCardHolder: (String) -> Unit,
-    cardExpiry: String, onCardExpiry: (String) -> Unit,
-    cardCvv: String,    onCardCvv: (String) -> Unit
+private fun CouponField(
+    applied: String?,
+    onApply: (String, (Boolean, String) -> Unit) -> Unit,
+    onRemove: () -> Unit
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text("Forma de pagamento", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+    var code by remember { mutableStateOf("") }
+    var message by remember { mutableStateOf<String?>(null) }
+    var isError by remember { mutableStateOf(false) }
 
-        paymentOptions.forEach { option ->
-            val isSelected = selected == option.key
-            Card(
-                shape = RoundedCornerShape(12.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = if (isSelected) Primary.copy(alpha = 0.08f) else Surface
-                ),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .border(
-                        width = if (isSelected) 2.dp else 1.dp,
-                        color = if (isSelected) Primary else Color(0xFFE0E0E0),
-                        shape = RoundedCornerShape(12.dp)
-                    )
-                    .clickable { onSelect(option.key) }
+    if (applied != null) {
+        Card(
+            shape = RoundedCornerShape(12.dp),
+            colors = CardDefaults.cardColors(containerColor = Primary.copy(alpha = 0.08f)),
+            modifier = Modifier
+                .fillMaxWidth()
+                .border(1.dp, Primary, RoundedCornerShape(12.dp))
+        ) {
+            Row(
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(option.icon, contentDescription = null,
-                        tint = if (isSelected) Primary else TextSecondary,
-                        modifier = Modifier.size(22.dp))
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(option.label, fontWeight = FontWeight.SemiBold,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = if (isSelected) Primary else TextPrimary)
-                        Text(option.subtitle, style = MaterialTheme.typography.bodySmall,
-                            color = TextSecondary)
-                    }
-                    RadioButton(selected = isSelected, onClick = { onSelect(option.key) },
-                        colors = RadioButtonDefaults.colors(selectedColor = Primary))
+                Icon(Icons.Default.LocalOffer, null, tint = Primary, modifier = Modifier.size(20.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text("Cupom $applied", fontWeight = FontWeight.SemiBold,
+                        style = MaterialTheme.typography.bodyMedium, color = Primary)
+                    Text("Desconto aplicado", style = MaterialTheme.typography.bodySmall, color = TextSecondary)
+                }
+                TextButton(onClick = { onRemove(); message = null }) {
+                    Text("Remover", color = Error, fontSize = 12.sp)
                 }
             }
-
-            // Credit card fields — expand when Cartão is selected
-            AnimatedVisibility(
-                visible = isSelected && option.key == "CREDIT_CARD",
-                enter = expandVertically(),
-                exit  = shrinkVertically()
+        }
+    } else {
+        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Card(
+                OutlinedTextField(
+                    value = code,
+                    onValueChange = { code = it.uppercase(); isError = false; message = null },
+                    label = { Text("Cupom de desconto") },
+                    leadingIcon = { Icon(Icons.Default.LocalOffer, null, tint = Primary) },
+                    singleLine = true,
+                    isError = isError,
                     shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(containerColor = Surface),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        OutlinedTextField(
-                            value = cardNumber,
-                            onValueChange = { raw ->
-                                val digits = raw.filter { it.isDigit() }.take(16)
-                                onCardNumber(digits.chunked(4).joinToString(" "))
-                            },
-                            label = { Text("Número do cartão") },
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                            placeholder = { Text("0000 0000 0000 0000") },
-                            singleLine = true,
-                            modifier = Modifier.fillMaxWidth(),
-                            leadingIcon = { Icon(Icons.Default.CreditCard, null) }
-                        )
-                        OutlinedTextField(
-                            value = cardHolder,
-                            onValueChange = { onCardHolder(it.uppercase()) },
-                            label = { Text("Nome do titular") },
-                            placeholder = { Text("NOME COMO NO CARTÃO") },
-                            singleLine = true,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                            OutlinedTextField(
-                                value = cardExpiry,
-                                onValueChange = { raw ->
-                                    val digits = raw.filter { it.isDigit() }.take(4)
-                                    onCardExpiry(if (digits.length > 2) "${digits.take(2)}/${digits.drop(2)}" else digits)
-                                },
-                                label = { Text("Validade") },
-                                placeholder = { Text("MM/AA") },
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                singleLine = true,
-                                modifier = Modifier.weight(1f)
-                            )
-                            OutlinedTextField(
-                                value = cardCvv,
-                                onValueChange = { if (it.length <= 4 && it.all(Char::isDigit)) onCardCvv(it) },
-                                label = { Text("CVV") },
-                                placeholder = { Text("123") },
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                singleLine = true,
-                                modifier = Modifier.weight(1f),
-                                trailingIcon = { Icon(Icons.Default.Lock, null, modifier = Modifier.size(16.dp)) }
-                            )
+                    modifier = Modifier.weight(1f)
+                )
+                FilledTonalButton(
+                    onClick = {
+                        if (code.isNotBlank()) onApply(code) { ok, msg ->
+                            isError = !ok; message = msg
+                            if (ok) code = ""
                         }
-                    }
-                }
+                    },
+                    enabled = code.isNotBlank(),
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.height(56.dp)
+                ) { Text("Aplicar") }
             }
-
-            // PIX info
-            AnimatedVisibility(
-                visible = isSelected && option.key == "PIX",
-                enter = expandVertically(),
-                exit  = shrinkVertically()
-            ) {
-                Card(
-                    shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFE8F5E9)),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Row(
-                        modifier = Modifier.padding(14.dp),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(Icons.Default.CheckCircle, null, tint = Color(0xFF388E3C), modifier = Modifier.size(18.dp))
-                        Column {
-                            Text("Pagamento instantâneo", fontWeight = FontWeight.SemiBold,
-                                fontSize = 12.sp, color = Color(0xFF2E7D32))
-                            Text("O QR Code será gerado após a confirmação do pedido.",
-                                fontSize = 11.sp, color = Color(0xFF388E3C))
-                        }
-                    }
-                }
-            }
-
-            // Boleto info
-            AnimatedVisibility(
-                visible = isSelected && option.key == "BOLETO",
-                enter = expandVertically(),
-                exit  = shrinkVertically()
-            ) {
-                Card(
-                    shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF8E1)),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Row(
-                        modifier = Modifier.padding(14.dp),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(Icons.Default.Info, null, tint = Color(0xFFF57F17), modifier = Modifier.size(18.dp))
-                        Column {
-                            Text("Boleto Bancário", fontWeight = FontWeight.SemiBold,
-                                fontSize = 12.sp, color = Color(0xFFE65100))
-                            Text("O boleto será enviado por e-mail após a confirmação. Vence em 3 dias úteis.",
-                                fontSize = 11.sp, color = Color(0xFFF57F17))
-                        }
-                    }
-                }
+            message?.let {
+                Text(it, style = MaterialTheme.typography.bodySmall,
+                    color = if (isError) Error else Success)
             }
         }
     }
@@ -463,17 +309,21 @@ private fun PaymentMethodSelector(
 @Composable
 private fun ChangeAddressDialog(
     currentStreet: String,
+    currentNumber: String,
+    currentComplement: String,
     currentCity: String,
     currentState: String,
     currentZip: String,
     onLookupCep: (String, (com.fasttrade.android.data.model.ViaCepResponse?) -> Unit) -> Unit,
     onDismiss: () -> Unit,
-    onConfirm: (street: String, city: String, state: String, zip: String) -> Unit
+    onConfirm: (street: String, number: String, complement: String, city: String, state: String, zip: String) -> Unit
 ) {
-    var street by remember { mutableStateOf(currentStreet) }
-    var city   by remember { mutableStateOf(currentCity) }
-    var state  by remember { mutableStateOf(currentState) }
-    var zip    by remember { mutableStateOf(currentZip) }
+    var street     by remember { mutableStateOf(currentStreet) }
+    var number     by remember { mutableStateOf(currentNumber) }
+    var complement by remember { mutableStateOf(currentComplement) }
+    var city       by remember { mutableStateOf(currentCity) }
+    var state      by remember { mutableStateOf(currentState) }
+    var zip        by remember { mutableStateOf(currentZip) }
     var isLoadingCep by remember { mutableStateOf(false) }
     var cepError by remember { mutableStateOf(false) }
 
@@ -495,15 +345,45 @@ private fun ChangeAddressDialog(
         }
     }
 
+    val fieldShape = RoundedCornerShape(12.dp)
+    val fieldColors = OutlinedTextFieldDefaults.colors(
+        focusedBorderColor = Primary,
+        unfocusedBorderColor = Color(0xFFDADCE0),
+        focusedLabelColor = Primary,
+        focusedLeadingIconColor = Primary,
+        unfocusedLeadingIconColor = TextSecondary,
+        cursorColor = Primary
+    )
+
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Endereço de entrega") },
+        shape = RoundedCornerShape(20.dp),
+        containerColor = Color.White,
+        icon = {
+            Box(
+                modifier = Modifier.size(44.dp).clip(RoundedCornerShape(50)).background(Primary.copy(alpha = 0.10f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(Icons.Default.LocationOn, null, tint = Primary, modifier = Modifier.size(24.dp))
+            }
+        },
+        title = {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text("Endereço de entrega", fontWeight = FontWeight.Bold)
+                Text(
+                    "Informe o CEP para preencher automaticamente",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = TextSecondary
+                )
+            }
+        },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 OutlinedTextField(
                     value = zip,
                     onValueChange = { if (it.filter { c -> c.isDigit() }.length <= 8) zip = it },
                     label = { Text("CEP") },
+                    leadingIcon = { Icon(Icons.Default.LocationOn, null) },
                     trailingIcon = {
                         if (isLoadingCep) {
                             CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp, color = Primary)
@@ -513,38 +393,73 @@ private fun ChangeAddressDialog(
                     singleLine = true,
                     isError = cepError,
                     supportingText = { if (cepError) Text("CEP não encontrado") },
+                    shape = fieldShape,
+                    colors = fieldColors,
                     modifier = Modifier.fillMaxWidth()
                 )
                 OutlinedTextField(
                     value = street,
                     onValueChange = { street = it },
                     label = { Text("Rua / Logradouro") },
+                    leadingIcon = { Icon(Icons.Default.Home, null) },
                     singleLine = true,
+                    shape = fieldShape,
+                    colors = fieldColors,
                     modifier = Modifier.fillMaxWidth()
                 )
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedTextField(
+                        value = number,
+                        onValueChange = { number = it },
+                        label = { Text("Número") },
+                        singleLine = true,
+                        shape = fieldShape,
+                        colors = fieldColors,
+                        modifier = Modifier.weight(1f)
+                    )
+                    OutlinedTextField(
+                        value = complement,
+                        onValueChange = { complement = it },
+                        label = { Text("Complemento") },
+                        singleLine = true,
+                        shape = fieldShape,
+                        colors = fieldColors,
+                        modifier = Modifier.weight(2f)
+                    )
+                }
                 OutlinedTextField(
                     value = city,
                     onValueChange = { city = it },
                     label = { Text("Cidade") },
+                    leadingIcon = { Icon(Icons.Default.LocationCity, null) },
                     singleLine = true,
+                    shape = fieldShape,
+                    colors = fieldColors,
                     modifier = Modifier.fillMaxWidth()
                 )
                 OutlinedTextField(
                     value = state,
                     onValueChange = { if (it.length <= 2) state = it.uppercase() },
                     label = { Text("UF") },
+                    leadingIcon = { Icon(Icons.Default.Public, null) },
                     singleLine = true,
+                    shape = fieldShape,
+                    colors = fieldColors,
                     modifier = Modifier.fillMaxWidth()
                 )
             }
         },
         confirmButton = {
-            TextButton(onClick = { onConfirm(street, city, state, zip) }) {
-                Text("Salvar", color = Primary)
+            Button(
+                onClick = { onConfirm(street, number, complement, city, state, zip) },
+                shape = RoundedCornerShape(10.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Primary)
+            ) {
+                Text("Salvar", color = Color.White, fontWeight = FontWeight.SemiBold)
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancelar") }
+            TextButton(onClick = onDismiss) { Text("Cancelar", color = TextSecondary) }
         }
     )
 }
@@ -637,7 +552,7 @@ private fun CartItemRow(
 // ─── Summary Row ─────────────────────────────────────────────────────────────
 
 @Composable
-private fun SummaryRow(
+internal fun SummaryRow(
     label: String,
     value: String,
     isBold: Boolean = false,
