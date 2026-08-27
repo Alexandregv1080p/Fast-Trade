@@ -32,6 +32,7 @@ import com.fasttrade.android.viewmodel.AppViewModel
 fun OrderDetailScreen(
     orderId: Long,
     onBack: () -> Unit,
+    onViewPayment: (orderId: Long, method: String, amount: Double) -> Unit = { _, _, _ -> },
     viewModel: AppViewModel = hiltViewModel()
 ) {
     val order by viewModel.selectedOrder.collectAsState()
@@ -112,7 +113,7 @@ fun OrderDetailScreen(
                         .verticalScroll(rememberScrollState())
                         // leave room for bottom buttons
                         .padding(bottom = when {
-                            currentStatus == OrderStatus.PENDING                  -> 120.dp  // cancel button
+                            currentStatus == OrderStatus.PENDING                  -> 184.dp  // pagamento + cancelar
                             currentStatus == OrderStatus.TRANSIT                  -> 72.dp   // confirm button
                             else                                                  -> 24.dp
                         }),
@@ -351,8 +352,9 @@ fun OrderDetailScreen(
                 // ── Bottom action button(s) ───────────────────────────────────
                 val showConfirmDelivery = currentStatus == OrderStatus.TRANSIT
                 val showCancel         = isCancellable
+                val showPayment        = currentStatus == OrderStatus.PENDING && o.paymentMethod.isNotEmpty()
 
-                if (showConfirmDelivery || showCancel) {
+                if (showConfirmDelivery || showCancel || showPayment) {
                     Column(
                         modifier = Modifier
                             .align(Alignment.BottomCenter)
@@ -361,6 +363,20 @@ fun OrderDetailScreen(
                             .padding(horizontal = 16.dp, vertical = 12.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
+                        if (showPayment) {
+                            Button(
+                                onClick = { onViewPayment(o.id, o.paymentMethod, o.total) },
+                                modifier = Modifier.fillMaxWidth().height(48.dp),
+                                shape = RoundedCornerShape(8.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = Primary)
+                            ) {
+                                Icon(Icons.Default.QrCode, null, modifier = Modifier.size(18.dp), tint = Color.White)
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("VER PAGAMENTO", fontSize = 13.sp,
+                                    fontWeight = FontWeight.Bold, color = Color.White, letterSpacing = 1.sp)
+                            }
+                        }
+
                         if (showConfirmDelivery) {
                             Button(
                                 onClick = { /* CONFIRMAR RECEBIMENTO — future feature */ },

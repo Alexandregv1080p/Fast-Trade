@@ -207,17 +207,9 @@ class AppViewModel @Inject constructor(
     private val _appliedCoupon = MutableStateFlow<String?>(null)
     val appliedCoupon: StateFlow<String?> = _appliedCoupon
 
-    // ponytail: coupons resolved client-side; move to a backend /cart/coupon endpoint when one exists
-    private fun couponDiscount(code: String, cart: Cart): Double? = when (code.trim().uppercase()) {
-        "FRETEGRATIS" -> cart.deliveryFee
-        "FAST10"      -> cart.subtotal * 0.10
-        "BEMVINDO"    -> minOf(50.0, cart.subtotal)
-        else          -> null
-    }
-
     fun applyCoupon(code: String, onResult: (Boolean, String) -> Unit) {
         val cart = _cart.value ?: return onResult(false, "Carrinho vazio")
-        val discount = couponDiscount(code, cart)
+        val discount = Coupons.discountFor(code, cart)
             ?: return onResult(false, "Cupom inválido")
         _appliedCoupon.value = code.trim().uppercase()
         _cart.value = cart.copy(discount = discount)
@@ -235,7 +227,7 @@ class AppViewModel @Inject constructor(
             when (val r = repo.getCart()) {
                 is Result.Success -> {
                     val code = _appliedCoupon.value
-                    val discount = code?.let { couponDiscount(it, r.data) } ?: 0.0
+                    val discount = code?.let { Coupons.discountFor(it, r.data) } ?: 0.0
                     _cart.value = r.data.copy(discount = discount)
                 }
                 else              -> Unit

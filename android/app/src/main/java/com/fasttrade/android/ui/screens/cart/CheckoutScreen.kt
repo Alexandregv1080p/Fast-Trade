@@ -30,7 +30,7 @@ import com.fasttrade.android.viewmodel.AppViewModel
 @Composable
 fun CheckoutScreen(
     onBack: () -> Unit,
-    onOrderPlaced: (Long) -> Unit,
+    onOrderPlaced: (orderId: Long, method: String, amount: Double) -> Unit,
     viewModel: AppViewModel = hiltViewModel()
 ) {
     val cart by viewModel.cart.collectAsState()
@@ -118,9 +118,10 @@ fun CheckoutScreen(
                         if (!placingOrder) {
                             placingOrder = true
                             orderError = null
+                            val total = c.total
                             viewModel.placeOrder(selectedPayment) { success, orderId ->
                                 placingOrder = false
-                                if (success) onOrderPlaced(orderId)
+                                if (success) onOrderPlaced(orderId, selectedPayment, total)
                                 else orderError = "Não foi possível finalizar o pedido. Tente novamente."
                             }
                         }

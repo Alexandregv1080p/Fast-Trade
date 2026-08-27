@@ -17,6 +17,7 @@ import com.fasttrade.android.ui.screens.auth.LoginScreen
 import com.fasttrade.android.ui.screens.auth.RegisterScreen
 import com.fasttrade.android.ui.screens.cart.CartScreen
 import com.fasttrade.android.ui.screens.cart.CheckoutScreen
+import com.fasttrade.android.ui.screens.cart.PaymentStatusScreen
 import com.fasttrade.android.ui.screens.home.HomeScreen
 import com.fasttrade.android.ui.screens.onboarding.OnboardingScreen
 import com.fasttrade.android.ui.screens.orders.OrderDetailScreen
@@ -49,6 +50,7 @@ object Routes {
     const val HOME           = "home"
     const val CART           = "cart"
     const val CHECKOUT       = "checkout"
+    const val PAYMENT_STATUS = "payment_status/{orderId}/{method}/{amount}/{auto}"
     const val ORDERS         = "orders"
     const val CONVERSATIONS  = "conversations"
     const val PROFILE        = "profile"
@@ -66,6 +68,8 @@ object Routes {
 
     fun productDetail(id: Long) = "product/$id"
     fun orderDetail(id: Long)   = "order/$id"
+    fun paymentStatus(orderId: Long, method: String, amount: Double, auto: Boolean = true) =
+        "payment_status/$orderId/$method/$amount/$auto"
     fun sellerProfile(id: Long) = "seller/$id"
     fun directChat(sellerId: Long, sellerName: String) =
         "direct_chat/$sellerId/${android.net.Uri.encode(sellerName)}"
@@ -237,6 +241,13 @@ fun AppNavigation(viewModel: AppViewModel = hiltViewModel()) {
             composable(Routes.CART) {
                 CartScreen(
                     onCheckout = { navController.navigate(Routes.CHECKOUT) },
+                    onContinueShopping = {
+                        navController.navigate(Routes.HOME) {
+                            popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
                     viewModel = viewModel
                 )
             }
@@ -244,12 +255,42 @@ fun AppNavigation(viewModel: AppViewModel = hiltViewModel()) {
             composable(Routes.CHECKOUT) {
                 CheckoutScreen(
                     onBack = { navController.popBackStack() },
-                    onOrderPlaced = { orderId ->
-                        navController.navigate(Routes.orderDetail(orderId)) {
-                            popUpTo(Routes.CART) { inclusive = false }
+                    onOrderPlaced = { orderId, method, amount ->
+                        navController.navigate(Routes.paymentStatus(orderId, method, amount)) {
+                            popUpTo(Routes.CHECKOUT) { inclusive = true }
                         }
                     },
                     viewModel = viewModel
+                )
+            }
+
+            composable(
+                route = Routes.PAYMENT_STATUS,
+                arguments = listOf(
+                    navArgument("orderId") { type = NavType.LongType },
+                    navArgument("method")  { type = NavType.StringType },
+                    navArgument("amount")  { type = NavType.FloatType },
+                    navArgument("auto")    { type = NavType.BoolType }
+                )
+            ) { backStackEntry ->
+                val orderId = backStackEntry.arguments?.getLong("orderId") ?: return@composable
+                val method  = backStackEntry.arguments?.getString("method") ?: "PIX"
+                val amount  = backStackEntry.arguments?.getFloat("amount")?.toDouble() ?: 0.0
+                val auto    = backStackEntry.arguments?.getBoolean("auto") ?: true
+                PaymentStatusScreen(
+                    orderId = orderId,
+                    method = method,
+                    amount = amount,
+                    autoApprove = auto,
+                    onDone = {
+                        if (auto) {
+                            navController.navigate(Routes.orderDetail(orderId)) {
+                                popUpTo(Routes.PAYMENT_STATUS) { inclusive = true }
+                            }
+                        } else {
+                            navController.popBackStack()  // reopened from the order → go back to it
+                        }
+                    }
                 )
             }
 
@@ -266,7 +307,10 @@ fun AppNavigation(viewModel: AppViewModel = hiltViewModel()) {
                 val orderId = backStackEntry.arguments?.getLong("orderId") ?: return@composable
                 OrderDetailScreen(
                     orderId = orderId,
-                    onBack = { navController.popBackStack() }
+                    onBack = { navController.popBackStack() },
+                    onViewPayment = { id, method, amount ->
+                        navController.navigate(Routes.paymentStatus(id, method, amount, auto = false))
+                    }
                 )
             }
 

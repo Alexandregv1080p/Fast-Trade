@@ -1,5 +1,6 @@
 package com.fasttrade.android.ui.screens.cart
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -31,6 +32,7 @@ import com.fasttrade.android.viewmodel.AppViewModel
 @Composable
 fun CartScreen(
     onCheckout: () -> Unit,
+    onContinueShopping: () -> Unit = {},
     viewModel: AppViewModel = hiltViewModel()
 ) {
     val cart by viewModel.cart.collectAsState()
@@ -212,6 +214,19 @@ fun CartScreen(
                             }
                             FtDivider()
                             SummaryRow("Total", "R$${String.format("%.2f", c.total)}", isBold = true)
+                        }
+                    }
+
+                    item {
+                        OutlinedButton(
+                            onClick = onContinueShopping,
+                            shape = RoundedCornerShape(10.dp),
+                            border = BorderStroke(1.dp, Primary),
+                            modifier = Modifier.fillMaxWidth().height(48.dp)
+                        ) {
+                            Icon(Icons.Default.ArrowBack, null, tint = Primary, modifier = Modifier.size(18.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Continuar comprando", color = Primary, fontWeight = FontWeight.SemiBold)
                         }
                     }
 

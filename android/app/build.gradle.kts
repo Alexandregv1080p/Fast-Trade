@@ -87,4 +87,7 @@ dependencies {
     implementation(libs.multidex)
 
     debugImplementation(libs.androidx.ui.tooling)
+
+    // Unit tests (JVM)
+    testImplementation("junit:junit:4.13.2")
 }
