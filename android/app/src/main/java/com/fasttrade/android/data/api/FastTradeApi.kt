@@ -68,6 +68,12 @@ interface FastTradeApi {
     @PATCH("cart/address")
     suspend fun updateCartAddress(@Body body: Map<String, String>): Response<Cart>
 
+    @POST("cart/coupon")
+    suspend fun applyCoupon(@Body body: Map<String, String>): Response<Cart>
+
+    @DELETE("cart/coupon")
+    suspend fun removeCoupon(): Response<Cart>
+
     // ── Orders ──────────────────────────────────────────────────────────────
 
     @GET("orders/my")

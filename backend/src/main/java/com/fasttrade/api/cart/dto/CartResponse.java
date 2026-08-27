@@ -15,4 +15,5 @@ public class CartResponse {
     private double discount = 0.0;
     private String estimatedDelivery = "3-5 dias úteis";
     private Object deliveryAddress = null;
+    private String couponCode = null;
 }

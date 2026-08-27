@@ -43,6 +43,9 @@ public class User {
     private String addressState;
     private String addressZip;
 
+    // Cupom aplicado no carrinho (limpo ao finalizar o pedido)
+    private String couponCode;
+
     @CreationTimestamp
     private LocalDateTime createdAt;
 

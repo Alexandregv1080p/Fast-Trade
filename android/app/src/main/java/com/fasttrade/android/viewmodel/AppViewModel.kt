@@ -204,32 +204,34 @@ class AppViewModel @Inject constructor(
         .map { it?.items?.sumOf { item -> item.quantity } ?: 0 }
         .stateIn(viewModelScope, SharingStarted.Eagerly, 0)
 
-    private val _appliedCoupon = MutableStateFlow<String?>(null)
-    val appliedCoupon: StateFlow<String?> = _appliedCoupon
+    // Cupom aplicado é decidido/validado no servidor; a tela reflete o que o carrinho traz.
+    val appliedCoupon: StateFlow<String?> = _cart
+        .map { it?.couponCode }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
     fun applyCoupon(code: String, onResult: (Boolean, String) -> Unit) {
-        val cart = _cart.value ?: return onResult(false, "Carrinho vazio")
-        val discount = Coupons.discountFor(code, cart)
-            ?: return onResult(false, "Cupom inválido")
-        _appliedCoupon.value = code.trim().uppercase()
-        _cart.value = cart.copy(discount = discount)
-        onResult(true, "Cupom aplicado!")
+        viewModelScope.launch {
+            when (val r = repo.applyCoupon(code)) {
+                is Result.Success -> { _cart.value = r.data; onResult(true, "Cupom aplicado!") }
+                is Result.Error   -> onResult(false, r.message)
+            }
+        }
     }
 
     fun removeCoupon() {
-        _appliedCoupon.value = null
-        _cart.value = _cart.value?.copy(discount = 0.0)
+        viewModelScope.launch {
+            when (val r = repo.removeCoupon()) {
+                is Result.Success -> _cart.value = r.data
+                else              -> Unit
+            }
+        }
     }
 
     fun loadCart() {
         viewModelScope.launch {
             _cartLoading.value = true
             when (val r = repo.getCart()) {
-                is Result.Success -> {
-                    val code = _appliedCoupon.value
-                    val discount = code?.let { Coupons.discountFor(it, r.data) } ?: 0.0
-                    _cart.value = r.data.copy(discount = discount)
-                }
+                is Result.Success -> _cart.value = r.data
                 else              -> Unit
             }
             _cartLoading.value = false

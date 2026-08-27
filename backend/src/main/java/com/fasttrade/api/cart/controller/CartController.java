@@ -57,6 +57,19 @@ public class CartController {
         return ResponseEntity.ok(Map.of("message", "Carrinho limpo com sucesso"));
     }
 
+    /** Aplica um cupom de desconto (validado no servidor). */
+    @PostMapping("/coupon")
+    public ResponseEntity<CartResponse> applyCoupon(@RequestBody Map<String, String> body) {
+        String code = body.getOrDefault("code", "");
+        return ResponseEntity.ok(cartService.applyCoupon(currentUserEmail(), code));
+    }
+
+    /** Remove o cupom aplicado. */
+    @DeleteMapping("/coupon")
+    public ResponseEntity<CartResponse> removeCoupon() {
+        return ResponseEntity.ok(cartService.removeCoupon(currentUserEmail()));
+    }
+
     /** Atualiza endereço de entrega (persiste no perfil do usuário) */
     @PatchMapping("/address")
     public ResponseEntity<CartResponse> updateAddress(@RequestBody Map<String, String> body) {

@@ -116,13 +116,18 @@ public class CustomerOrderController {
             subtotal = subtotal.add(price.multiply(BigDecimal.valueOf(ci.getQuantity())));
         }
 
-        BigDecimal deliveryFee = BigDecimal.valueOf(10.0);
-        order.setTotal(subtotal.add(deliveryFee));
+        BigDecimal deliveryFee = com.fasttrade.api.cart.service.CartService.DELIVERY_FEE;
+        BigDecimal discount = com.fasttrade.api.cart.service.CouponRules
+                .discountFor(user.getCouponCode(), subtotal, deliveryFee);
+        if (discount == null) discount = BigDecimal.ZERO;
+        order.setTotal(subtotal.add(deliveryFee).subtract(discount).max(BigDecimal.ZERO));
 
         Order saved = orderRepo.save(order);
 
-        // Clear cart
+        // Clear cart + cupom consumido
         cartItemRepo.deleteByUserEmail(email);
+        user.setCouponCode(null);
+        userRepo.save(user);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }

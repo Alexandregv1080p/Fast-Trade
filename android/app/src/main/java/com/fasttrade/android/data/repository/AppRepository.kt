@@ -134,6 +134,18 @@ class AppRepository @Inject constructor(
         else Result.Error(r.message(), r.code())
     }
 
+    suspend fun applyCoupon(code: String): Result<Cart> = safeCall {
+        val r = api.applyCoupon(mapOf("code" to code))
+        if (r.isSuccessful) Result.Success(r.body()!!)
+        else Result.Error("Cupom inválido", r.code())
+    }
+
+    suspend fun removeCoupon(): Result<Cart> = safeCall {
+        val r = api.removeCoupon()
+        if (r.isSuccessful) Result.Success(r.body()!!)
+        else Result.Error(r.message(), r.code())
+    }
+
     // ── Orders ──────────────────────────────────────────────────────────────
 
     suspend fun getMyOrders(): Result<List<Order>> = safeCall {

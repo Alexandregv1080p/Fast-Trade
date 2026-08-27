@@ -127,7 +127,8 @@ data class Cart(
     val deliveryFee: Double = 10.0,
     val discount: Double = 0.0,
     val estimatedDelivery: String = "",
-    val deliveryAddress: Address? = null
+    val deliveryAddress: Address? = null,
+    val couponCode: String? = null
 ) {
     val subtotal: Double get() = items.sumOf { it.subtotal }
     val total: Double get() = subtotal + deliveryFee - discount

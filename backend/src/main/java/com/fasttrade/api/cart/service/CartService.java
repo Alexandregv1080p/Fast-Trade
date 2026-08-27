@@ -26,6 +26,9 @@ public class CartService {
     private final ProductRepository productRepo;
     private final UserRepository userRepo;
 
+    /** Frete padrão — fonte única, usada aqui e no fechamento do pedido. */
+    public static final java.math.BigDecimal DELIVERY_FEE = java.math.BigDecimal.valueOf(10.0);
+
     public CartResponse getCart(String email) {
         List<CartItem> items = cartItemRepo.findByUserEmailOrderByCreatedAtAsc(email);
         User user = userRepo.findByEmail(email).orElse(null);
@@ -77,6 +80,38 @@ public class CartService {
         cartItemRepo.deleteByUserEmail(email);
     }
 
+    /** Aplica um cupom (validado no servidor) e persiste no usuário. Erro 400 se inválido. */
+    public CartResponse applyCoupon(String email, String code) {
+        User user = userRepo.findByEmail(email)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado"));
+        java.util.List<CartItem> items = cartItemRepo.findByUserEmailOrderByCreatedAtAsc(email);
+        java.math.BigDecimal subtotal = subtotalOf(items);
+        if (CouponRules.discountFor(code, subtotal, DELIVERY_FEE) == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cupom inválido");
+        }
+        user.setCouponCode(code.trim().toUpperCase());
+        userRepo.save(user);
+        return buildResponse(items, user);
+    }
+
+    public CartResponse removeCoupon(String email) {
+        User user = userRepo.findByEmail(email)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado"));
+        user.setCouponCode(null);
+        userRepo.save(user);
+        return getCart(email);
+    }
+
+    private java.math.BigDecimal subtotalOf(List<CartItem> items) {
+        java.math.BigDecimal subtotal = java.math.BigDecimal.ZERO;
+        for (CartItem ci : items) {
+            java.math.BigDecimal price = ci.getProduct().getPrice() != null
+                    ? ci.getProduct().getPrice() : java.math.BigDecimal.ZERO;
+            subtotal = subtotal.add(price.multiply(java.math.BigDecimal.valueOf(ci.getQuantity())));
+        }
+        return subtotal;
+    }
+
     private CartResponse buildResponse(List<CartItem> items, User user) {
         List<CartItemResponse> responses = items.stream()
                 .map(i -> new CartItemResponse(i.getProduct(), i.getQuantity()))
@@ -92,6 +127,19 @@ public class CartService {
                 "neighborhood", ""
             );
         }
-        return new CartResponse(responses, 10.0, 0.0, "3-5 dias úteis", address);
+
+        String coupon = user != null ? user.getCouponCode() : null;
+        java.math.BigDecimal subtotal = subtotalOf(items);
+        java.math.BigDecimal discount = CouponRules.discountFor(coupon, subtotal, DELIVERY_FEE);
+        if (discount == null) discount = java.math.BigDecimal.ZERO;
+
+        return new CartResponse(
+                responses,
+                DELIVERY_FEE.doubleValue(),
+                discount.doubleValue(),
+                "3-5 dias úteis",
+                address,
+                (discount.signum() > 0) ? coupon : null
+        );
     }
 }
