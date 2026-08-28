@@ -28,6 +28,7 @@ public class CustomerOrderController {
     private final OrderRepository orderRepo;
     private final CartItemRepository cartItemRepo;
     private final UserRepository userRepo;
+    private final com.fasttrade.api.config.FeeConfig feeConfig;
 
     private String email() {
         return SecurityContextHolder.getContext().getAuthentication().getName();
@@ -120,7 +121,18 @@ public class CustomerOrderController {
         BigDecimal discount = com.fasttrade.api.cart.service.CouponRules
                 .discountFor(user.getCouponCode(), subtotal, deliveryFee);
         if (discount == null) discount = BigDecimal.ZERO;
-        order.setTotal(subtotal.add(deliveryFee).subtract(discount).max(BigDecimal.ZERO));
+        BigDecimal tax = feeConfig.taxOn(subtotal);
+        order.setTax(tax);
+        order.setDeliveryFee(deliveryFee);
+        order.setTotal(subtotal.add(deliveryFee).add(tax).subtract(discount).max(BigDecimal.ZERO));
+
+        // Ponto de integração da Fase 3.1: quando o PagBank estiver configurado,
+        // criar a cobrança aqui e guardar a referência. Sem token, segue o fluxo atual.
+        // if (pagBankConfig.enabled()) {
+        //     PaymentResult charge = paymentService.createCharge(order, order.getPaymentMethod(), /*cardToken*/ null);
+        //     order.setChargeId(charge.chargeId());
+        //     // devolver dados do PIX/boleto (charge.pixCopyPaste(), charge.boletoLine(), ...) na resposta
+        // }
 
         Order saved = orderRepo.save(order);
 

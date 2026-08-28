@@ -259,7 +259,7 @@ fun ProductDetailScreen(
                                 horizontalArrangement = Arrangement.spacedBy(4.dp)
                             ) {
                                 Text(
-                                    text = "Comissão: R$ ${String.format("%.2f", p.price * 0.05)}",
+                                    text = "Comissão: R$ ${String.format("%.2f", p.commission ?: 0.0)}",
                                     style = MaterialTheme.typography.labelSmall,
                                     color = TextSecondary
                                 )

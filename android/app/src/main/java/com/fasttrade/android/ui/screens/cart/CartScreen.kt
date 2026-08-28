@@ -209,6 +209,9 @@ fun CartScreen(
                         ) {
                             SummaryRow("Subtotal", "R$${String.format("%.2f", c.subtotal)}")
                             SummaryRow("Frete", "R$${String.format("%.2f", c.deliveryFee)}")
+                            if (c.tax > 0) {
+                                SummaryRow("Taxa de troca", "R$${String.format("%.2f", c.tax)}")
+                            }
                             if (c.discount > 0) {
                                 SummaryRow("Desconto", "-R$${String.format("%.2f", c.discount)}", isDiscount = true)
                             }

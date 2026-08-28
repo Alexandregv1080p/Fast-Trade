@@ -95,6 +95,7 @@ data class Product(
     val name: String = "",
     val description: String = "",
     val price: Double = 0.0,
+    val commission: Double? = null,
     val imageUrl: String? = null,
     val category: CategoryInfo? = null,
     val stock: Int = 0,
@@ -126,12 +127,13 @@ data class Cart(
     val items: List<CartItem> = emptyList(),
     val deliveryFee: Double = 10.0,
     val discount: Double = 0.0,
+    val tax: Double = 0.0,
     val estimatedDelivery: String = "",
     val deliveryAddress: Address? = null,
     val couponCode: String? = null
 ) {
     val subtotal: Double get() = items.sumOf { it.subtotal }
-    val total: Double get() = subtotal + deliveryFee - discount
+    val total: Double get() = subtotal + deliveryFee + tax - discount
 }
 
 data class AddToCartRequest(
@@ -148,6 +150,7 @@ data class Order(
     val total: Double = 0.0,
     val deliveryFee: Double = 0.0,
     val discount: Double = 0.0,
+    val tax: Double = 0.0,
     @SerializedName("createdAt") val createdAt: String = "",
     val items: List<OrderItem> = emptyList(),
     val deliveryAddress: Address? = null,

@@ -30,6 +30,10 @@ public class Product {
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal price = BigDecimal.ZERO;
 
+    /** Comissão da plataforma — apenas exibição, calculada no serviço a partir da config. */
+    @Transient
+    private BigDecimal commission;
+
     private Integer stock = 0;
     private Boolean isActive = true;
 

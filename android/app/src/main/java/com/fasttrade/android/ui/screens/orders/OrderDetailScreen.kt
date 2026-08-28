@@ -101,8 +101,7 @@ fun OrderDetailScreen(
             val o = order!!
             val currentStatus = o.status.toOrderStatus()
             val subtotal      = o.items.sumOf { it.subtotal }  // unitPrice * quantity
-            val taxRate       = 0.02
-            val taxAmount     = subtotal * taxRate
+            val taxAmount     = o.tax  // calculada e cobrada pelo backend
             val isCancellable = currentStatus == OrderStatus.PENDING && !cancelling
 
             Box(modifier = Modifier.fillMaxSize()) {

@@ -69,6 +69,9 @@ fun CheckoutScreen(
                     ) {
                         SummaryRow("Subtotal", "R$${String.format("%.2f", c.subtotal)}")
                         SummaryRow("Frete", "R$${String.format("%.2f", c.deliveryFee)}")
+                        if (c.tax > 0) {
+                            SummaryRow("Taxa de troca", "R$${String.format("%.2f", c.tax)}")
+                        }
                         if (c.discount > 0) {
                             SummaryRow("Desconto", "-R$${String.format("%.2f", c.discount)}", isDiscount = true)
                         }
@@ -119,6 +122,9 @@ fun CheckoutScreen(
                             placingOrder = true
                             orderError = null
                             val total = c.total
+                            // TODO(3.4): se selectedPayment == "CREDIT_CARD", tokenizar o cartão
+                            //   localmente (public key PagBank) ANTES de enviar e passar só o token
+                            //   ao placeOrder — PAN/CVV nunca vão pro backend.
                             viewModel.placeOrder(selectedPayment) { success, orderId ->
                                 placingOrder = false
                                 if (success) onOrderPlaced(orderId, selectedPayment, total)

@@ -13,6 +13,7 @@ public class CartResponse {
     private List<CartItemResponse> items;
     private double deliveryFee = 10.0;
     private double discount = 0.0;
+    private double tax = 0.0;
     private String estimatedDelivery = "3-5 dias úteis";
     private Object deliveryAddress = null;
     private String couponCode = null;

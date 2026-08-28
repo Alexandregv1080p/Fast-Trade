@@ -49,6 +49,24 @@ jobs:
         working-directory: frontend
         run: npm run build -- --configuration=production
 
+  android-test:
+    name: Android · build e testes
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: testes unitarios + build debug e release
+        working-directory: android
+        # assembleRelease roda o R8/minify → valida as regras do proguard-rules.pro
+        run: ./gradlew --no-daemon testDebugUnitTest assembleDebug assembleRelease
+
   # ------------------------------------------------------- migrations
   migrations:
     name: Flyway · aplica migrations num Postgres real

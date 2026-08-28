@@ -40,6 +40,8 @@ fun PaymentStatusScreen(
     // On the fresh checkout path PIX/card auto-approve after a short wait; boleto stays pending.
     // When reopened from an order, just show the payment info (no fake approval).
     var status by remember { mutableStateOf(PayStatus.WAITING) }
+    // TODO(3.5): trocar este timer por polling do status real do pedido
+    //   (GET /api/orders/{id}) até CONFIRMED/CANCELLED, e remover o autoApprove.
     LaunchedEffect(Unit) {
         if (autoApprove && (method == "PIX" || method == "CREDIT_CARD")) {
             delay(4500)
@@ -126,6 +128,8 @@ private fun PixContent(orderId: Long, amount: Double) {
             .padding(14.dp),
         contentAlignment = Alignment.Center
     ) {
+        // TODO(3.2): renderizar o QR real do PagBank (pixQrCodeUrl via AsyncImage, ou
+        //   gerar do pixCopyPaste com uma lib de QR) em vez deste placeholder decorativo.
         QrPlaceholder(seed = orderId.toInt() + amount.toInt())
     }
 
@@ -171,6 +175,8 @@ private fun CardProcessingContent(amount: Double) {
 @Composable
 private fun BoletoContent(orderId: Long, amount: Double) {
     val clipboard = LocalClipboardManager.current
+    // TODO(3.3): usar a linha digitável real (boletoLine) e o link do PDF (boletoUrl)
+    //   vindos do pedido/cobrança; trocar o Barcode() decorativo abaixo por um botão que abre boletoUrl.
     val line = remember(orderId, amount) {
         val cents = (amount * 100).toLong().toString().padStart(10, '0')
         "34191.79001 01043.510047 91020.150008 8 ${orderId.toString().padStart(4, '0')}$cents"

@@ -25,6 +25,7 @@ public class CartService {
     private final CartItemRepository cartItemRepo;
     private final ProductRepository productRepo;
     private final UserRepository userRepo;
+    private final com.fasttrade.api.config.FeeConfig feeConfig;
 
     /** Frete padrão — fonte única, usada aqui e no fechamento do pedido. */
     public static final java.math.BigDecimal DELIVERY_FEE = java.math.BigDecimal.valueOf(10.0);
@@ -132,11 +133,13 @@ public class CartService {
         java.math.BigDecimal subtotal = subtotalOf(items);
         java.math.BigDecimal discount = CouponRules.discountFor(coupon, subtotal, DELIVERY_FEE);
         if (discount == null) discount = java.math.BigDecimal.ZERO;
+        java.math.BigDecimal tax = feeConfig.taxOn(subtotal);
 
         return new CartResponse(
                 responses,
                 DELIVERY_FEE.doubleValue(),
                 discount.doubleValue(),
+                tax.doubleValue(),
                 "3-5 dias úteis",
                 address,
                 (discount.signum() > 0) ? coupon : null

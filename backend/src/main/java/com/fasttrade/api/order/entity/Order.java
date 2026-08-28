@@ -43,8 +43,18 @@ public class Order {
     @Column(precision = 10, scale = 2)
     private BigDecimal total = BigDecimal.ZERO;
 
+    @Column(precision = 10, scale = 2)
+    private BigDecimal tax = BigDecimal.ZERO;
+
+    @Column(name = "delivery_fee", precision = 10, scale = 2)
+    private BigDecimal deliveryFee = BigDecimal.ZERO;
+
     private String status = "PENDING"; // PENDING|CONFIRMED|PICKING|PACKED|SHIPPED|DELIVERED|CANCELLED|REFUNDED|DEVOLUTION
     private String paymentMethod;
+
+    /** Referência da cobrança no PagBank (Fase 3.1). Null enquanto a integração estiver desligada. */
+    @Column(name = "charge_id")
+    private String chargeId;
     private String statusNote;
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)

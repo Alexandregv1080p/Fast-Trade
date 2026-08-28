@@ -22,18 +22,26 @@ public class ProductService {
     private final ProductRepository repo;
     private final CategoryRepository categoryRepo;
     private final SubcategoryRepository subcategoryRepo;
+    private final com.fasttrade.api.config.FeeConfig feeConfig;
+
+    /** Preenche a comissão de exibição a partir da config. */
+    private Product withCommission(Product p) {
+        if (p != null) p.setCommission(feeConfig.commissionOn(p.getPrice()));
+        return p;
+    }
 
     public PageResponse<Product> getAll(int page, int pageSize, String search) {
         var pageable = PageRequest.of(page - 1, pageSize, Sort.by("createdAt").descending());
         var result = (search == null || search.isBlank())
                 ? repo.findAll(pageable)
                 : repo.findByNameContainingIgnoreCase(search, pageable);
+        result.getContent().forEach(this::withCommission);
         return PageResponse.of(result.getContent(), page, pageSize, result.getTotalElements());
     }
 
     public Product getById(Long id) {
-        return repo.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Produto não encontrado"));
+        return withCommission(repo.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Produto não encontrado")));
     }
 
     public Product create(Map<String, Object> data) {

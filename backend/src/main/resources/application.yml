@@ -43,6 +43,17 @@ app:
   jwt:
     secret: ${JWT_SECRET:4f6e8b2c9d1a7e3f5g2h8i4j6k0l2m9n1o3p5q7r2s4t6u8v0w2x4y6z8a1b3c5}
     expiration: ${JWT_EXPIRATION:604800000}  # 7 dias em ms
+  # Taxas da plataforma — fonte única, antes hardcoded no app Android.
+  fees:
+    commission-rate: ${FEES_COMMISSION_RATE:0.05}   # comissão exibida no produto
+    trade-tax-rate:  ${FEES_TRADE_TAX_RATE:0.02}     # taxa de troca cobrada no pedido
+
+  # Gateway de pagamento (PagBank/PagSeguro). Token NUNCA vai pro repo/app — só env/Secret.
+  # Sem token configurado, o app segue no fluxo simulado atual (nada quebra).
+  pagbank:
+    base-url: ${PAGBANK_BASE_URL:https://sandbox.api.pagseguro.com}
+    token:    ${PAGBANK_TOKEN:}          # vazio = integração desligada
+    sandbox:  ${PAGBANK_SANDBOX:true}
 
 # Actuator: expoe apenas health e info, com os grupos que as probes do k8s consomem
 management:
