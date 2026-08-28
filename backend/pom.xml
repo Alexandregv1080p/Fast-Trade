@@ -23,6 +23,8 @@
     <!-- Sobrescreve a versao gerenciada pelo Spring Boot 3.2 (Flyway 9.x).
          O Flyway 10 exige o modulo especifico do banco (flyway-database-postgresql). -->
     <flyway.version>10.17.3</flyway.version>
+    <!-- springdoc nao e gerenciado pelo BOM do Spring Boot; 2.5.x casa com Boot 3.2. -->
+    <springdoc.version>2.5.0</springdoc.version>
   </properties>
 
   <dependencies>
@@ -114,10 +116,33 @@
       <optional>true</optional>
     </dependency>
 
+    <!-- Documentação de API: Swagger UI + OpenAPI a partir dos controllers/DTOs -->
+    <dependency>
+      <groupId>org.springdoc</groupId>
+      <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+      <version>${springdoc.version}</version>
+    </dependency>
+
     <!-- Test -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-test</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <!-- Testcontainers: Postgres real nos testes de integração (versões geridas pelo BOM do Spring Boot) -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-testcontainers</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>postgresql</artifactId>
       <scope>test</scope>
     </dependency>
   </dependencies>
@@ -135,6 +160,20 @@
             </exclude>
           </excludes>
         </configuration>
+      </plugin>
+      <!-- Testes de integração (*IT, Testcontainers) rodam no `mvn verify`.
+           Os unitários (*Test) seguem no surefire, sem precisar de Docker. -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-failsafe-plugin</artifactId>
+        <executions>
+          <execution>
+            <goals>
+              <goal>integration-test</goal>
+              <goal>verify</goal>
+            </goals>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
   </build>

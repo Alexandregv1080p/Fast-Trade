@@ -40,6 +40,10 @@ public class SecurityConfig {
                     // validada por assinatura dentro do handler, não pelo Security.
                     "/api/payment/webhook",
                     "/ws/**",
+                    // Documentação de API (springdoc): Swagger UI + JSON do OpenAPI
+                    "/swagger-ui/**",
+                    "/swagger-ui.html",
+                    "/v3/api-docs/**",
                     "/error",
                     // Probes de liveness/readiness do Kubernetes
                     "/actuator/health",

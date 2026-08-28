@@ -1,0 +1,34 @@
+package com.fasttrade.api.config;
+
+import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.info.Info;
+import io.swagger.v3.oas.models.Components;
+import io.swagger.v3.oas.models.security.SecurityRequirement;
+import io.swagger.v3.oas.models.security.SecurityScheme;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+/**
+ * Metadados do OpenAPI + esquema de autenticação JWT (Bearer), pro botão "Authorize"
+ * do Swagger UI já enviar o token nas rotas protegidas. Swagger UI em /swagger-ui.html.
+ */
+@Configuration
+public class OpenApiConfig {
+
+    private static final String BEARER = "bearerAuth";
+
+    @Bean
+    public OpenAPI fastTradeOpenApi() {
+        return new OpenAPI()
+                .info(new Info()
+                        .title("Fast Trade API")
+                        .description("API do marketplace Fast Trade — auth, carrinho, pedidos, produtos, chat.")
+                        .version("v1"))
+                .addSecurityItem(new SecurityRequirement().addList(BEARER))
+                .components(new Components().addSecuritySchemes(BEARER,
+                        new SecurityScheme()
+                                .type(SecurityScheme.Type.HTTP)
+                                .scheme("bearer")
+                                .bearerFormat("JWT")));
+    }
+}
