@@ -48,6 +48,15 @@ android {
         compose = true
         buildConfig = true
     }
+
+    // Android lint como gate. Na 1ª run o baseline é gerado (issues atuais herdadas) e o
+    // build passa; depois de commitar lint-baseline.xml, só issues NOVAS quebram o CI.
+    lint {
+        baseline = file("lint-baseline.xml")
+        abortOnError = true
+        warningsAsErrors = false
+        checkReleaseBuilds = false
+    }
 }
 
 dependencies {

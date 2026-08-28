@@ -41,8 +41,14 @@ server:
 
 app:
   jwt:
+    # DEV-ONLY: em produção defina JWT_SECRET (a app avisa no boot se estiver usando este default).
     secret: ${JWT_SECRET:4f6e8b2c9d1a7e3f5g2h8i4j6k0l2m9n1o3p5q7r2s4t6u8v0w2x4y6z8a1b3c5}
     expiration: ${JWT_EXPIRATION:604800000}  # 7 dias em ms
+  # Admin inicial: sem ADMIN_PASSWORD, mantém a senha do seed (só dev). Em produção,
+  # defina ADMIN_PASSWORD e a app redefine a senha do admin no boot.
+  admin:
+    email: ${ADMIN_EMAIL:admin@fasttrade.com}
+    password: ${ADMIN_PASSWORD:}
   # Taxas da plataforma — fonte única, antes hardcoded no app Android.
   fees:
     commission-rate: ${FEES_COMMISSION_RATE:0.05}   # comissão exibida no produto
@@ -55,12 +61,12 @@ app:
     token:    ${PAGBANK_TOKEN:}          # vazio = integração desligada
     sandbox:  ${PAGBANK_SANDBOX:true}
 
-# Actuator: expoe apenas health e info, com os grupos que as probes do k8s consomem
+# Actuator: health/info para as probes do k8s + prometheus para métricas
 management:
   endpoints:
     web:
       exposure:
-        include: health,info
+        include: health,info,prometheus
   endpoint:
     health:
       probes:
@@ -71,8 +77,14 @@ management:
       enabled: true
     readinessstate:
       enabled: true
+  metrics:
+    tags:
+      application: fasttrade-api   # rotula todas as métricas com a app
 
 logging:
   level:
     com.fasttrade: ${LOG_LEVEL:DEBUG}
     org.springframework.security: WARN
+  pattern:
+    # Injeta o id de correlação (X-Request-Id) em toda linha de log: "... INFO [a1b2c3d4] ..."
+    level: "%5p [%X{requestId:-}]"

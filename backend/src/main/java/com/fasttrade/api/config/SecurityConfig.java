@@ -47,7 +47,9 @@ public class SecurityConfig {
                     "/error",
                     // Probes de liveness/readiness do Kubernetes
                     "/actuator/health",
-                    "/actuator/health/**"
+                    "/actuator/health/**",
+                    // Métricas p/ o Prometheus scrapear (em prod, restringir via network policy)
+                    "/actuator/prometheus"
                 ).permitAll()
                 .anyRequest().authenticated()
             )

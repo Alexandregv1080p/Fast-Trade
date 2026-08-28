@@ -1,0 +1,37 @@
+version: 2
+updates:
+  # Backend (Maven)
+  - package-ecosystem: maven
+    directory: /backend
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      backend-deps:
+        patterns: ["*"]
+
+  # Android (Gradle)
+  - package-ecosystem: gradle
+    directory: /android
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      android-deps:
+        patterns: ["*"]
+
+  # Frontend (npm)
+  - package-ecosystem: npm
+    directory: /frontend
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      frontend-deps:
+        patterns: ["*"]
+
+  # GitHub Actions usadas no CI
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly

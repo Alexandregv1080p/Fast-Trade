@@ -62,10 +62,22 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v4
 
-      - name: testes unitarios + build debug e release
+      - name: testes unitarios + lint + build debug e release
         working-directory: android
-        # assembleRelease roda o R8/minify → valida as regras do proguard-rules.pro
-        run: ./gradlew --no-daemon testDebugUnitTest assembleDebug assembleRelease
+        # lintDebug: análise estática (gate via baseline). assembleRelease roda o R8/minify.
+        run: ./gradlew --no-daemon testDebugUnitTest lintDebug assembleDebug assembleRelease
+
+  # -------------------------------------------------- secret scanning
+  secret-scan:
+    name: Segurança · secret scanning (gitleaks)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # gitleaks varre o histórico
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   # ------------------------------------------------------- migrations
   migrations:

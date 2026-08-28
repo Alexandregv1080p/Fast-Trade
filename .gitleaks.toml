@@ -1,0 +1,13 @@
+title = "Fast Trade — gitleaks"
+
+[extend]
+useDefault = true
+
+# Valores de DESENVOLVIMENTO conhecidos, sobrescritos por env/Secret em produção.
+# Allowlist por valor (não por arquivo) → segredo NOVO em qualquer lugar ainda é pego.
+[allowlist]
+description = "Defaults de dev (JWT secret e senha do Postgres local)"
+regexes = [
+  '''4f6e8b2c9d1a7e3f5g2h8i4j6k0l2m9n1o3p5q7r2s4t6u8v0w2x4y6z8a1b3c5''',
+  '''fasttrade123''',
+]
