@@ -7,6 +7,7 @@ import androidx.datastore.preferences.preferencesDataStore
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -27,6 +28,19 @@ class TokenManager @Inject constructor(
     val userName: Flow<String?> = context.dataStore.data.map { it[KEY_NAME] }
     val userEmail: Flow<String?> = context.dataStore.data.map { it[KEY_EMAIL] }
 
+    /**
+     * Cópia do token em memória, lida de forma síncrona pelo interceptor do OkHttp —
+     * assim ele não faz `runBlocking` numa leitura de DataStore a cada request.
+     * ponytail: preenchido com um runBlocking único na construção do singleton.
+     */
+    @Volatile
+    var cachedToken: String? = null
+        private set
+
+    init {
+        cachedToken = runBlocking { getTokenOnce() }
+    }
+
     suspend fun saveSession(token: String, name: String, email: String, role: String) {
         context.dataStore.edit {
             it[KEY_TOKEN] = token
@@ -34,10 +48,12 @@ class TokenManager @Inject constructor(
             it[KEY_EMAIL] = email
             it[KEY_ROLE]  = role
         }
+        cachedToken = token
     }
 
     suspend fun clearSession() {
         context.dataStore.edit { it.clear() }
+        cachedToken = null
     }
 
     suspend fun getTokenOnce(): String? {

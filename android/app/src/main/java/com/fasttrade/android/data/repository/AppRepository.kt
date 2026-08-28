@@ -160,8 +160,8 @@ class AppRepository @Inject constructor(
         else Result.Error(r.message(), r.code())
     }
 
-    suspend fun placeOrder(request: PlaceOrderRequest): Result<Order> = safeCall {
-        val r = api.placeOrder(request)
+    suspend fun placeOrder(request: PlaceOrderRequest, idempotencyKey: String): Result<Order> = safeCall {
+        val r = api.placeOrder(request, idempotencyKey)
         if (r.isSuccessful) Result.Success(r.body()!!)
         else Result.Error(r.message(), r.code())
     }

@@ -83,7 +83,10 @@ interface FastTradeApi {
     suspend fun getOrder(@Path("id") id: Long): Response<Order>
 
     @POST("orders")
-    suspend fun placeOrder(@Body request: PlaceOrderRequest): Response<Order>
+    suspend fun placeOrder(
+        @Body request: PlaceOrderRequest,
+        @Header("Idempotency-Key") idempotencyKey: String
+    ): Response<Order>
 
     @PATCH("orders/{id}/cancel")
     suspend fun cancelOrder(@Path("id") id: Long): Response<Order>

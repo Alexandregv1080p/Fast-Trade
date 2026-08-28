@@ -265,9 +265,9 @@ class AppViewModel @Inject constructor(
         }
     }
 
-    fun placeOrder(paymentMethod: String = "PIX", onResult: (success: Boolean, orderId: Long) -> Unit) {
+    fun placeOrder(paymentMethod: String = "PIX", idempotencyKey: String, onResult: (success: Boolean, orderId: Long) -> Unit) {
         viewModelScope.launch {
-            when (val r = repo.placeOrder(PlaceOrderRequest(paymentMethod = paymentMethod))) {
+            when (val r = repo.placeOrder(PlaceOrderRequest(paymentMethod = paymentMethod), idempotencyKey)) {
                 is Result.Success -> { loadCart(); loadOrders(); onResult(true, r.data.id) }
                 else              -> onResult(false, 0L)
             }

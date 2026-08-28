@@ -8,8 +8,6 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.firstOrNull
-import kotlinx.coroutines.runBlocking
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -34,7 +32,7 @@ object ApiModule {
     @Singleton
     fun provideOkHttpClient(tokenManager: TokenManager): OkHttpClient {
         val authInterceptor = Interceptor { chain ->
-            val token = runBlocking { tokenManager.token.firstOrNull() }
+            val token = tokenManager.cachedToken   // leitura em memória, sem bloquear a thread
             val request = if (token != null) {
                 chain.request().newBuilder()
                     .addHeader("Authorization", "Bearer $token")

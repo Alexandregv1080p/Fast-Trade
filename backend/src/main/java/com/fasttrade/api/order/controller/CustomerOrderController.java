@@ -87,11 +87,23 @@ public class CustomerOrderController {
     public ResponseEntity<Order> placeOrder(
             @org.springframework.web.bind.annotation.RequestBody(required = false)
             @jakarta.validation.Valid com.fasttrade.api.order.dto.PlaceOrderRequest req,
+            @org.springframework.web.bind.annotation.RequestHeader(value = "Idempotency-Key", required = false)
+            String idempotencyKey,
             Principal principal) {
         if (req == null) req = new com.fasttrade.api.order.dto.PlaceOrderRequest();
         String email = principal.getName();
         User user = userRepo.findByEmail(email)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado"));
+
+        // Idempotência (5.7): se já existe um pedido com esta chave, devolve o mesmo em vez
+        // de criar outro. ponytail: check-then-insert + UNIQUE como backstop; race exata
+        // simultânea é rara e o índice impede o duplicado de verdade.
+        if (idempotencyKey != null && !idempotencyKey.isBlank()) {
+            var existing = orderRepo.findByUser_IdAndIdempotencyKey(user.getId(), idempotencyKey);
+            if (existing.isPresent()) {
+                return ResponseEntity.ok(existing.get());
+            }
+        }
 
         List<CartItem> cartItems = cartItemRepo.findByUserEmailOrderByCreatedAtAsc(email);
         if (cartItems.isEmpty()) {
@@ -100,6 +112,9 @@ public class CustomerOrderController {
 
         // Build order
         Order order = new Order();
+        if (idempotencyKey != null && !idempotencyKey.isBlank()) {
+            order.setIdempotencyKey(idempotencyKey);
+        }
         order.setUser(user);
         order.setUserName(user.getName());
         order.setStatus("PENDING");

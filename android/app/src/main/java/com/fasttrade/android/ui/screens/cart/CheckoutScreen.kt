@@ -41,6 +41,8 @@ fun CheckoutScreen(
     var cardHolder by remember { mutableStateOf("") }
     var cardExpiry by remember { mutableStateOf("") }
     var cardCvv    by remember { mutableStateOf("") }
+    // Chave de idempotência estável por tela: double-tap em "Finalizar" não cria 2 pedidos.
+    val idempotencyKey = remember { java.util.UUID.randomUUID().toString() }
 
     Column(
         modifier = Modifier.fillMaxSize().background(Color.White)
@@ -125,7 +127,7 @@ fun CheckoutScreen(
                             // TODO(3.4): se selectedPayment == "CREDIT_CARD", tokenizar o cartão
                             //   localmente (public key PagBank) ANTES de enviar e passar só o token
                             //   ao placeOrder — PAN/CVV nunca vão pro backend.
-                            viewModel.placeOrder(selectedPayment) { success, orderId ->
+                            viewModel.placeOrder(selectedPayment, idempotencyKey) { success, orderId ->
                                 placingOrder = false
                                 if (success) onOrderPlaced(orderId, selectedPayment, total)
                                 else orderError = "Não foi possível finalizar o pedido. Tente novamente."

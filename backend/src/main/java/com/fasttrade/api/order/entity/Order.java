@@ -57,6 +57,10 @@ public class Order {
     private String chargeId;
     private String statusNote;
 
+    /** Chave de idempotência (Fase 5.7): mesmo double-tap/retry não cria pedido duplicado. */
+    @Column(name = "idempotency_key", unique = true)
+    private String idempotencyKey;
+
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> items = new ArrayList<>();
 
