@@ -108,14 +108,13 @@ public class ChatController {
     /** Envia mensagem direta para outro usuário (autenticado via JWT) */
     @PostMapping("/direct/send")
     public ResponseEntity<ChatMessageDto> sendDirect(
-            @RequestBody Map<String, Object> body,
+            @jakarta.validation.Valid @RequestBody com.fasttrade.api.chat.dto.DirectMessageRequest body,
             Principal principal) {
         User sender = userRepo.findByEmail(principal.getName())
                 .orElseThrow(() -> new org.springframework.web.server.ResponseStatusException(
                         org.springframework.http.HttpStatus.UNAUTHORIZED));
-        Long receiverId = Long.parseLong(body.get("receiverId").toString());
-        String content  = body.get("content").toString();
-        ChatMessageDto dto = chatService.sendDirect(sender.getId(), sender.getName(), receiverId, content);
+        ChatMessageDto dto = chatService.sendDirect(
+                sender.getId(), sender.getName(), body.getReceiverId(), body.getContent());
         return ResponseEntity.ok(dto);
     }
 
@@ -139,9 +138,10 @@ public class ChatController {
     // ── REST: public customer endpoint ───────────────────────────────────────
 
     @PostMapping("/support/request")
-    public ResponseEntity<Map<String, String>> requestSupport(@RequestBody Map<String, String> body) {
-        String email = body.getOrDefault("email", "unknown");
-        String name  = body.getOrDefault("name", "Cliente");
+    public ResponseEntity<Map<String, String>> requestSupport(
+            @jakarta.validation.Valid @RequestBody com.fasttrade.api.chat.dto.SupportRequest body) {
+        String email = body.getEmail() != null ? body.getEmail() : "unknown";
+        String name  = body.getName()  != null ? body.getName()  : "Cliente";
         String room  = "support-" + email;
 
         // System message to open the conversation

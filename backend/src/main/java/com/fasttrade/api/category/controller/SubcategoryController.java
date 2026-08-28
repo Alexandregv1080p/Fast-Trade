@@ -7,7 +7,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/subcategory")
@@ -22,12 +21,15 @@ public class SubcategoryController {
     }
 
     @PostMapping
-    public ResponseEntity<Subcategory> create(@RequestBody Map<String, Object> data) {
+    public ResponseEntity<Subcategory> create(
+            @jakarta.validation.Valid @RequestBody com.fasttrade.api.category.dto.SubcategoryRequest data) {
         return ResponseEntity.ok(service.createSubcategory(data));
     }
 
     @PatchMapping("/{id}")
-    public ResponseEntity<Subcategory> update(@PathVariable Long id, @RequestBody Map<String, Object> data) {
+    public ResponseEntity<Subcategory> update(
+            @PathVariable Long id,
+            @jakarta.validation.Valid @RequestBody com.fasttrade.api.category.dto.SubcategoryRequest data) {
         return ResponseEntity.ok(service.updateSubcategory(id, data));
     }
 

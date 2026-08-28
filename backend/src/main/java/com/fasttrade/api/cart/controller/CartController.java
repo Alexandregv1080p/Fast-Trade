@@ -59,9 +59,9 @@ public class CartController {
 
     /** Aplica um cupom de desconto (validado no servidor). */
     @PostMapping("/coupon")
-    public ResponseEntity<CartResponse> applyCoupon(@RequestBody Map<String, String> body) {
-        String code = body.getOrDefault("code", "");
-        return ResponseEntity.ok(cartService.applyCoupon(currentUserEmail(), code));
+    public ResponseEntity<CartResponse> applyCoupon(
+            @jakarta.validation.Valid @RequestBody com.fasttrade.api.cart.dto.CouponRequest req) {
+        return ResponseEntity.ok(cartService.applyCoupon(currentUserEmail(), req.getCode()));
     }
 
     /** Remove o cupom aplicado. */
@@ -70,16 +70,17 @@ public class CartController {
         return ResponseEntity.ok(cartService.removeCoupon(currentUserEmail()));
     }
 
-    /** Atualiza endereço de entrega (persiste no perfil do usuário) */
+    /** Atualiza endereço de entrega (persiste no perfil do usuário). Update parcial. */
     @PatchMapping("/address")
-    public ResponseEntity<CartResponse> updateAddress(@RequestBody Map<String, String> body) {
+    public ResponseEntity<CartResponse> updateAddress(
+            @jakarta.validation.Valid @RequestBody com.fasttrade.api.cart.dto.AddressUpdateRequest req) {
         String email = currentUserEmail();
         User user = userRepo.findByEmail(email)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado"));
-        if (body.containsKey("street")) user.setAddressStreet(body.get("street"));
-        if (body.containsKey("city"))   user.setAddressCity(body.get("city"));
-        if (body.containsKey("state"))  user.setAddressState(body.get("state"));
-        if (body.containsKey("zip"))    user.setAddressZip(body.get("zip"));
+        if (req.getStreet() != null) user.setAddressStreet(req.getStreet());
+        if (req.getCity()   != null) user.setAddressCity(req.getCity());
+        if (req.getState()  != null) user.setAddressState(req.getState());
+        if (req.getZip()    != null) user.setAddressZip(req.getZip());
         userRepo.save(user);
         return ResponseEntity.ok(cartService.getCart(email));
     }

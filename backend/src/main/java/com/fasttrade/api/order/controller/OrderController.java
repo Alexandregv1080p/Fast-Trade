@@ -8,7 +8,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/order")
@@ -32,7 +31,9 @@ public class OrderController {
     }
 
     @PatchMapping("/{id}/status")
-    public ResponseEntity<Order> updateStatus(@PathVariable Long id, @RequestBody Map<String, String> body) {
+    public ResponseEntity<Order> updateStatus(
+            @PathVariable Long id,
+            @jakarta.validation.Valid @RequestBody com.fasttrade.api.order.dto.StatusUpdateRequest body) {
         return ResponseEntity.ok(service.updateStatus(id, body));
     }
 

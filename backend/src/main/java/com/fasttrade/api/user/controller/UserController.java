@@ -45,7 +45,9 @@ public class UserController {
     }
 
     @PatchMapping("/{id}")
-    public ResponseEntity<User> update(@PathVariable Long id, @RequestBody Map<String, Object> data) {
+    public ResponseEntity<User> update(
+            @PathVariable Long id,
+            @jakarta.validation.Valid @RequestBody com.fasttrade.api.user.dto.AdminUserUpdateRequest data) {
         return ResponseEntity.ok(service.update(id, data));
     }
 
@@ -66,22 +68,27 @@ public class UserController {
     }
 
     @PostMapping("/{id}/trades")
-    public ResponseEntity<User> giveTrades(@PathVariable Long id, @RequestBody Map<String, Integer> body) {
-        return ResponseEntity.ok(service.giveTrades(id, body.get("value")));
+    public ResponseEntity<User> giveTrades(
+            @PathVariable Long id,
+            @jakarta.validation.Valid @RequestBody com.fasttrade.api.user.dto.GiveTradesRequest body) {
+        return ResponseEntity.ok(service.giveTrades(id, body.getValue()));
     }
 
     /** Atualiza dados do próprio perfil */
     @PutMapping("/me")
-    public ResponseEntity<User> updateMe(@RequestBody Map<String, Object> data, Principal principal) {
+    public ResponseEntity<User> updateMe(
+            @jakarta.validation.Valid @RequestBody com.fasttrade.api.user.dto.ProfileUpdateRequest data,
+            Principal principal) {
         return ResponseEntity.ok(service.updateSelf(principal.getName(), data));
     }
 
     /** Troca de senha */
     @PostMapping("/change-password")
     public ResponseEntity<Map<String, String>> changePassword(
-            @RequestBody Map<String, String> body, Principal principal) {
+            @jakarta.validation.Valid @RequestBody com.fasttrade.api.user.dto.ChangePasswordRequest body,
+            Principal principal) {
         service.changePassword(principal.getName(),
-                body.get("currentPassword"), body.get("newPassword"));
+                body.getCurrentPassword(), body.getNewPassword());
         return ResponseEntity.ok(java.util.Map.of("message", "Senha alterada com sucesso"));
     }
 

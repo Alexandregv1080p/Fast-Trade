@@ -84,8 +84,11 @@ public class CustomerOrderController {
     /** Finaliza o carrinho e cria um pedido */
     @Transactional
     @PostMapping
-    public ResponseEntity<Order> placeOrder(@RequestBody(required = false) Map<String, Object> body,
-                                            Principal principal) {
+    public ResponseEntity<Order> placeOrder(
+            @org.springframework.web.bind.annotation.RequestBody(required = false)
+            @jakarta.validation.Valid com.fasttrade.api.order.dto.PlaceOrderRequest req,
+            Principal principal) {
+        if (req == null) req = new com.fasttrade.api.order.dto.PlaceOrderRequest();
         String email = principal.getName();
         User user = userRepo.findByEmail(email)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado"));
@@ -100,8 +103,7 @@ public class CustomerOrderController {
         order.setUser(user);
         order.setUserName(user.getName());
         order.setStatus("PENDING");
-        order.setPaymentMethod(body != null && body.containsKey("paymentMethod")
-                ? (String) body.get("paymentMethod") : "PIX");
+        order.setPaymentMethod(req.getPaymentMethod());
 
         BigDecimal subtotal = BigDecimal.ZERO;
         for (CartItem ci : cartItems) {
@@ -129,7 +131,7 @@ public class CustomerOrderController {
         // Ponto de integração da Fase 3.1: quando o PagBank estiver configurado,
         // criar a cobrança aqui e guardar a referência. Sem token, segue o fluxo atual.
         // if (pagBankConfig.enabled()) {
-        //     PaymentResult charge = paymentService.createCharge(order, order.getPaymentMethod(), /*cardToken*/ null);
+        //     PaymentResult charge = paymentService.createCharge(order, order.getPaymentMethod(), req.getCardToken());
         //     order.setChargeId(charge.chargeId());
         //     // devolver dados do PIX/boleto (charge.pixCopyPaste(), charge.boletoLine(), ...) na resposta
         // }

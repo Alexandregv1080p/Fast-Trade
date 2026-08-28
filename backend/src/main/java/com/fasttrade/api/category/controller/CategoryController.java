@@ -7,7 +7,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/category")
@@ -27,12 +26,15 @@ public class CategoryController {
     }
 
     @PostMapping
-    public ResponseEntity<Category> create(@RequestBody Map<String, String> data) {
+    public ResponseEntity<Category> create(
+            @jakarta.validation.Valid @RequestBody com.fasttrade.api.category.dto.CategoryRequest data) {
         return ResponseEntity.ok(service.createCategory(data));
     }
 
     @PatchMapping("/{id}")
-    public ResponseEntity<Category> update(@PathVariable Long id, @RequestBody Map<String, String> data) {
+    public ResponseEntity<Category> update(
+            @PathVariable Long id,
+            @jakarta.validation.Valid @RequestBody com.fasttrade.api.category.dto.CategoryRequest data) {
         return ResponseEntity.ok(service.updateCategory(id, data));
     }
 

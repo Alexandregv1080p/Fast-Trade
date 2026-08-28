@@ -12,9 +12,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.math.BigDecimal;
-import java.util.Map;
-
 @Service
 @RequiredArgsConstructor
 public class ProductService {
@@ -44,16 +41,16 @@ public class ProductService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Produto não encontrado")));
     }
 
-    public Product create(Map<String, Object> data) {
+    public Product create(com.fasttrade.api.product.dto.ProductRequest data) {
         var p = new Product();
         applyData(p, data);
-        return repo.save(p);
+        return withCommission(repo.save(p));
     }
 
-    public Product update(Long id, Map<String, Object> data) {
+    public Product update(Long id, com.fasttrade.api.product.dto.ProductRequest data) {
         Product p = getById(id);
         applyData(p, data);
-        return repo.save(p);
+        return withCommission(repo.save(p));
     }
 
     public void delete(Long id) {
@@ -73,22 +70,20 @@ public class ProductService {
         return repo.save(p);
     }
 
-    private void applyData(Product p, Map<String, Object> data) {
-        if (data.containsKey("name")) p.setName((String) data.get("name"));
-        if (data.containsKey("description")) p.setDescription((String) data.get("description"));
-        if (data.containsKey("price")) p.setPrice(new BigDecimal(data.get("price").toString()));
-        if (data.containsKey("stock")) p.setStock(Integer.valueOf(data.get("stock").toString()));
-        if (data.containsKey("isActive")) p.setIsActive((Boolean) data.get("isActive"));
-        if (data.containsKey("sku")) p.setSku((String) data.get("sku"));
-        if (data.containsKey("condition")) p.setCondition((String) data.get("condition"));
-        if (data.containsKey("imageUrl")) p.setImageUrl((String) data.get("imageUrl"));
-        if (data.containsKey("categoryId") && data.get("categoryId") != null) {
-            Long catId = Long.valueOf(data.get("categoryId").toString());
-            categoryRepo.findById(catId).ifPresent(p::setCategory);
+    private void applyData(Product p, com.fasttrade.api.product.dto.ProductRequest d) {
+        if (d.getName() != null) p.setName(d.getName());
+        if (d.getDescription() != null) p.setDescription(d.getDescription());
+        if (d.getPrice() != null) p.setPrice(d.getPrice());
+        if (d.getStock() != null) p.setStock(d.getStock());
+        if (d.getIsActive() != null) p.setIsActive(d.getIsActive());
+        if (d.getSku() != null) p.setSku(d.getSku());
+        if (d.getCondition() != null) p.setCondition(d.getCondition());
+        if (d.getImageUrl() != null) p.setImageUrl(d.getImageUrl());
+        if (d.getCategoryId() != null) {
+            categoryRepo.findById(d.getCategoryId()).ifPresent(p::setCategory);
         }
-        if (data.containsKey("subcategoryId") && data.get("subcategoryId") != null) {
-            Long subId = Long.valueOf(data.get("subcategoryId").toString());
-            subcategoryRepo.findById(subId).ifPresent(p::setSubcategory);
+        if (d.getSubcategoryId() != null) {
+            subcategoryRepo.findById(d.getSubcategoryId()).ifPresent(p::setSubcategory);
         }
     }
 }

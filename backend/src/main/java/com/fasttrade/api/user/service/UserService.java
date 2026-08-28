@@ -11,7 +11,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -33,11 +32,11 @@ public class UserService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado"));
     }
 
-    public User update(Long id, Map<String, Object> data) {
+    public User update(Long id, com.fasttrade.api.user.dto.AdminUserUpdateRequest data) {
         User user = getById(id);
-        if (data.containsKey("name")) user.setName((String) data.get("name"));
-        if (data.containsKey("phone")) user.setPhone((String) data.get("phone"));
-        if (data.containsKey("cpfCnpj")) user.setCpfCnpj((String) data.get("cpfCnpj"));
+        if (data.getName() != null) user.setName(data.getName());
+        if (data.getPhone() != null) user.setPhone(data.getPhone());
+        if (data.getCpfCnpj() != null) user.setCpfCnpj(data.getCpfCnpj());
         return repo.save(user);
     }
 
@@ -64,16 +63,16 @@ public class UserService {
         return repo.save(user);
     }
 
-    public User updateSelf(String email, Map<String, Object> data) {
+    public User updateSelf(String email, com.fasttrade.api.user.dto.ProfileUpdateRequest data) {
         User user = repo.findByEmail(email)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado"));
-        if (data.containsKey("name"))      user.setName((String) data.get("name"));
-        if (data.containsKey("phone"))     user.setPhone((String) data.get("phone"));
-        if (data.containsKey("birthDate")) user.setBirthDate((String) data.get("birthDate"));
-        if (data.containsKey("addressStreet")) user.setAddressStreet((String) data.get("addressStreet"));
-        if (data.containsKey("addressCity"))   user.setAddressCity((String) data.get("addressCity"));
-        if (data.containsKey("addressState"))  user.setAddressState((String) data.get("addressState"));
-        if (data.containsKey("addressZip"))    user.setAddressZip((String) data.get("addressZip"));
+        if (data.getName() != null)      user.setName(data.getName());
+        if (data.getPhone() != null)     user.setPhone(data.getPhone());
+        if (data.getBirthDate() != null) user.setBirthDate(data.getBirthDate());
+        if (data.getAddressStreet() != null) user.setAddressStreet(data.getAddressStreet());
+        if (data.getAddressCity() != null)   user.setAddressCity(data.getAddressCity());
+        if (data.getAddressState() != null)  user.setAddressState(data.getAddressState());
+        if (data.getAddressZip() != null)    user.setAddressZip(data.getAddressZip());
         return repo.save(user);
     }
 

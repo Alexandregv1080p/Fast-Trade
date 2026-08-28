@@ -13,7 +13,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
-import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -53,10 +52,10 @@ public class OrderService {
         return order;
     }
 
-    public Order updateStatus(Long id, Map<String, String> body) {
+    public Order updateStatus(Long id, com.fasttrade.api.order.dto.StatusUpdateRequest req) {
         Order order = getById(id);
-        order.setStatus(body.get("status"));
-        if (body.containsKey("note")) order.setStatusNote(body.get("note"));
+        order.setStatus(req.getStatus());
+        if (req.getNote() != null) order.setStatusNote(req.getNote());
         return repo.save(order);
     }
 

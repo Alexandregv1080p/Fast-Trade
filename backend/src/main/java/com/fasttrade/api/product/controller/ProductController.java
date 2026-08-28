@@ -7,8 +7,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Map;
-
 @RestController
 @RequestMapping("/api/products")
 @RequiredArgsConstructor
@@ -30,12 +28,15 @@ public class ProductController {
     }
 
     @PostMapping
-    public ResponseEntity<Product> create(@RequestBody Map<String, Object> data) {
+    public ResponseEntity<Product> create(
+            @jakarta.validation.Valid @RequestBody com.fasttrade.api.product.dto.ProductRequest data) {
         return ResponseEntity.ok(service.create(data));
     }
 
     @PatchMapping("/{id}")
-    public ResponseEntity<Product> update(@PathVariable Long id, @RequestBody Map<String, Object> data) {
+    public ResponseEntity<Product> update(
+            @PathVariable Long id,
+            @jakarta.validation.Valid @RequestBody com.fasttrade.api.product.dto.ProductRequest data) {
         return ResponseEntity.ok(service.update(id, data));
     }
 

@@ -27,12 +27,15 @@ public class AdminController {
     }
 
     @PostMapping("/collaborators")
-    public ResponseEntity<AdminUser> createCollaborator(@RequestBody Map<String, String> data) {
+    public ResponseEntity<AdminUser> createCollaborator(
+            @jakarta.validation.Valid @RequestBody com.fasttrade.api.admin.dto.CollaboratorRequest data) {
         return ResponseEntity.ok(service.createCollaborator(data));
     }
 
     @PatchMapping("/collaborators/{id}")
-    public ResponseEntity<AdminUser> updateCollaborator(@PathVariable Long id, @RequestBody Map<String, String> data) {
+    public ResponseEntity<AdminUser> updateCollaborator(
+            @PathVariable Long id,
+            @jakarta.validation.Valid @RequestBody com.fasttrade.api.admin.dto.CollaboratorRequest data) {
         return ResponseEntity.ok(service.updateCollaborator(id, data));
     }
 

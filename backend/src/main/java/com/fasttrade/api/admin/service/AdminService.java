@@ -56,25 +56,25 @@ public class AdminService {
         return adminRepo.findAll();
     }
 
-    public AdminUser createCollaborator(Map<String, String> data) {
-        if (adminRepo.existsByEmail(data.get("email"))) {
+    public AdminUser createCollaborator(com.fasttrade.api.admin.dto.CollaboratorRequest data) {
+        if (adminRepo.existsByEmail(data.getEmail())) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "E-mail já cadastrado");
         }
         var admin = new AdminUser();
-        admin.setName(data.get("name"));
-        admin.setEmail(data.get("email"));
-        admin.setPassword(passwordEncoder.encode(data.get("password")));
-        admin.setRole(data.getOrDefault("role", "ADMIN"));
+        admin.setName(data.getName());
+        admin.setEmail(data.getEmail());
+        admin.setPassword(passwordEncoder.encode(data.getPassword()));
+        admin.setRole(data.getRole() != null ? data.getRole() : "ADMIN");
         return adminRepo.save(admin);
     }
 
-    public AdminUser updateCollaborator(Long id, Map<String, String> data) {
+    public AdminUser updateCollaborator(Long id, com.fasttrade.api.admin.dto.CollaboratorRequest data) {
         AdminUser admin = adminRepo.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        if (data.containsKey("name")) admin.setName(data.get("name"));
-        if (data.containsKey("role")) admin.setRole(data.get("role"));
-        if (data.containsKey("password") && data.get("password") != null && !data.get("password").isBlank()) {
-            admin.setPassword(passwordEncoder.encode(data.get("password")));
+        if (data.getName() != null) admin.setName(data.getName());
+        if (data.getRole() != null) admin.setRole(data.getRole());
+        if (data.getPassword() != null && !data.getPassword().isBlank()) {
+            admin.setPassword(passwordEncoder.encode(data.getPassword()));
         }
         return adminRepo.save(admin);
     }

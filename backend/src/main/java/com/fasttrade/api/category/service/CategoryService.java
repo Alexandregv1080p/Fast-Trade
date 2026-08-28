@@ -10,7 +10,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
-import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -28,17 +27,17 @@ public class CategoryService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Categoria não encontrada"));
     }
 
-    public Category createCategory(Map<String, String> data) {
+    public Category createCategory(com.fasttrade.api.category.dto.CategoryRequest data) {
         var c = new Category();
-        c.setName(data.get("name"));
-        c.setSlug(data.get("slug"));
+        c.setName(data.getName());
+        c.setSlug(data.getSlug());
         return categoryRepo.save(c);
     }
 
-    public Category updateCategory(Long id, Map<String, String> data) {
+    public Category updateCategory(Long id, com.fasttrade.api.category.dto.CategoryRequest data) {
         Category c = getCategoryById(id);
-        if (data.containsKey("name")) c.setName(data.get("name"));
-        if (data.containsKey("slug")) c.setSlug(data.get("slug"));
+        if (data.getName() != null) c.setName(data.getName());
+        if (data.getSlug() != null) c.setSlug(data.getSlug());
         return categoryRepo.save(c);
     }
 
@@ -56,24 +55,22 @@ public class CategoryService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Subcategoria não encontrada"));
     }
 
-    public Subcategory createSubcategory(Map<String, Object> data) {
+    public Subcategory createSubcategory(com.fasttrade.api.category.dto.SubcategoryRequest data) {
         var s = new Subcategory();
-        s.setName((String) data.get("name"));
-        s.setSlug((String) data.get("slug"));
-        if (data.get("categoryId") != null) {
-            Long catId = Long.valueOf(data.get("categoryId").toString());
-            s.setCategory(getCategoryById(catId));
+        s.setName(data.getName());
+        s.setSlug(data.getSlug());
+        if (data.getCategoryId() != null) {
+            s.setCategory(getCategoryById(data.getCategoryId()));
         }
         return subcategoryRepo.save(s);
     }
 
-    public Subcategory updateSubcategory(Long id, Map<String, Object> data) {
+    public Subcategory updateSubcategory(Long id, com.fasttrade.api.category.dto.SubcategoryRequest data) {
         Subcategory s = getSubcategoryById(id);
-        if (data.containsKey("name")) s.setName((String) data.get("name"));
-        if (data.containsKey("slug")) s.setSlug((String) data.get("slug"));
-        if (data.containsKey("categoryId") && data.get("categoryId") != null) {
-            Long catId = Long.valueOf(data.get("categoryId").toString());
-            s.setCategory(getCategoryById(catId));
+        if (data.getName() != null) s.setName(data.getName());
+        if (data.getSlug() != null) s.setSlug(data.getSlug());
+        if (data.getCategoryId() != null) {
+            s.setCategory(getCategoryById(data.getCategoryId()));
         }
         return subcategoryRepo.save(s);
     }
