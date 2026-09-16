@@ -125,7 +125,7 @@ fun CheckoutScreen(
                             orderError = null
                             val total = c.total
                             // TODO(3.4): se selectedPayment == "CREDIT_CARD", tokenizar o cartão
-                            //   localmente (public key PagBank) ANTES de enviar e passar só o token
+                            //   localmente (public key do Mercado Pago, via SDK/MP.js) ANTES de enviar e passar só o token
                             //   ao placeOrder — PAN/CVV nunca vão pro backend.
                             viewModel.placeOrder(selectedPayment, idempotencyKey) { success, orderId ->
                                 placingOrder = false

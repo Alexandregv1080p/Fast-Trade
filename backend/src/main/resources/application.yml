@@ -54,12 +54,12 @@ app:
     commission-rate: ${FEES_COMMISSION_RATE:0.05}   # comissão exibida no produto
     trade-tax-rate:  ${FEES_TRADE_TAX_RATE:0.02}     # taxa de troca cobrada no pedido
 
-  # Gateway de pagamento (PagBank/PagSeguro). Token NUNCA vai pro repo/app — só env/Secret.
-  # Sem token configurado, o app segue no fluxo simulado atual (nada quebra).
-  pagbank:
-    base-url: ${PAGBANK_BASE_URL:https://sandbox.api.pagseguro.com}
-    token:    ${PAGBANK_TOKEN:}          # vazio = integração desligada
-    sandbox:  ${PAGBANK_SANDBOX:true}
+  # Gateway de pagamento: Mercado Pago. Credencial NUNCA vai pro repo/app — só env/Secret.
+  # Use as de TESTE (access token começa com "TEST-"); sem token, o fluxo simulado continua.
+  mercadopago:
+    base-url:     ${MP_BASE_URL:https://api.mercadopago.com}
+    access-token: ${MP_ACCESS_TOKEN:}     # vazio = integração desligada
+    public-key:   ${MP_PUBLIC_KEY:}        # vai pro app p/ tokenizar cartão
 
 # Actuator: health/info para as probes do k8s + prometheus para métricas
 management:

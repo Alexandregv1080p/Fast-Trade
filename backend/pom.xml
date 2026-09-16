@@ -183,6 +183,29 @@
         </executions>
       </plugin>
 
+      <!-- Cobertura: gera relatório (target/site/jacoco). Report-only por enquanto —
+           subir p/ gate é adicionar uma execução `check` com <minimum> quando os testes
+           do 5.2 crescerem. -->
+      <plugin>
+        <groupId>org.jacoco</groupId>
+        <artifactId>jacoco-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>prepare-agent</id>
+            <goals>
+              <goal>prepare-agent</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>report</id>
+            <phase>test</phase>
+            <goals>
+              <goal>report</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
       <!-- Formatação: google-java-format. `mvn verify` (CI) roda o check e falha se
            houver código fora do padrão. Formatar tudo de uma vez: `mvn spotless:apply`. -->
       <plugin>

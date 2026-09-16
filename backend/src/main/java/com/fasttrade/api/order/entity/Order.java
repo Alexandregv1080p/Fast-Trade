@@ -52,7 +52,7 @@ public class Order {
     private String status = "PENDING"; // PENDING|CONFIRMED|PICKING|PACKED|SHIPPED|DELIVERED|CANCELLED|REFUNDED|DEVOLUTION
     private String paymentMethod;
 
-    /** Referência da cobrança no PagBank (Fase 3.1). Null enquanto a integração estiver desligada. */
+    /** Referência do pagamento no Mercado Pago (Fase 3.1). Null enquanto a integração estiver desligada. */
     @Column(name = "charge_id")
     private String chargeId;
     private String statusNote;

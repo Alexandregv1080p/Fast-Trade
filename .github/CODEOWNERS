@@ -1,0 +1,9 @@
+# Dono padrão de tudo — revisão obrigatória quando branch protection exigir CODEOWNERS.
+* @Alexandregv1080p
+
+# Caminhos sensíveis (dinheiro/segurança/schema) — atenção redobrada na revisão.
+/backend/src/main/java/com/fasttrade/api/payment/   @Alexandregv1080p
+/backend/src/main/java/com/fasttrade/api/order/     @Alexandregv1080p
+/backend/src/main/java/com/fasttrade/api/config/    @Alexandregv1080p
+/backend/src/main/resources/db/migration/           @Alexandregv1080p
+/.github/                                            @Alexandregv1080p

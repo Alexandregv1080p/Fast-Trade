@@ -41,26 +41,28 @@ fun OrderDetailScreen(
     var cancelling       by remember { mutableStateOf(false) }
 
     if (showCancelDialog) {
-        AlertDialog(
-            onDismissRequest = { showCancelDialog = false },
-            title = { Text("Cancelar pedido") },
-            text  = { Text("Tem certeza que deseja cancelar este pedido?") },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        showCancelDialog = false
-                        cancelling = true
-                        viewModel.cancelOrder(orderId) { success ->
-                            cancelling = false
-                            if (success) onBack()
-                        }
-                    }
-                ) { Text("Sim, cancelar", color = Color(0xFFD32F2F)) }
-            },
-            dismissButton = {
-                TextButton(onClick = { showCancelDialog = false }) { Text("Voltar") }
+        FtDialog(
+            onDismiss = { showCancelDialog = false },
+            icon = Icons.Default.WarningAmber,
+            title = "Cancelar pedido",
+            confirmText = "Sim, cancelar",
+            confirmColor = Error,
+            dismissText = "Voltar",
+            onConfirm = {
+                showCancelDialog = false
+                cancelling = true
+                viewModel.cancelOrder(orderId) { success ->
+                    cancelling = false
+                    if (success) onBack()
+                }
             }
-        )
+        ) {
+            Text(
+                "Tem certeza que deseja cancelar este pedido? Esta ação não pode ser desfeita.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = TextSecondary
+            )
+        }
     }
 
     LaunchedEffect(orderId) { viewModel.loadOrder(orderId) }

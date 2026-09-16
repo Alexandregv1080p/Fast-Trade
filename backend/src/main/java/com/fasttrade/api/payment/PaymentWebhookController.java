@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 
 /**
- * Webhook de status do PagBank (Fase 3.5). Rota pública (liberada no SecurityConfig);
+ * Webhook de status do Mercado Pago (Fase 3.5). Rota pública (liberada no SecurityConfig);
  * a autenticidade é validada por assinatura dentro do handler, não pelo Spring Security.
  *
  * Esqueleto: hoje só confirma o recebimento (200) sem processar — assim o endpoint

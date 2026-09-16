@@ -36,7 +36,7 @@ public class SecurityConfig {
                     "/api/admin/reset",
                     "/api/chat/support/**",
                     "/api/chat/history/support-*",
-                    // Webhook do PagBank (Fase 3.5): chamado sem JWT; a autenticidade é
+                    // Webhook do Mercado Pago (Fase 3.5): chamado sem JWT; a autenticidade é
                     // validada por assinatura dentro do handler, não pelo Security.
                     "/api/payment/webhook",
                     "/ws/**",

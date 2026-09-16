@@ -214,6 +214,7 @@ class AppViewModel @Inject constructor(
             when (val r = repo.applyCoupon(code)) {
                 is Result.Success -> { _cart.value = r.data; onResult(true, "Cupom aplicado!") }
                 is Result.Error   -> onResult(false, r.message)
+                else              -> Unit
             }
         }
     }

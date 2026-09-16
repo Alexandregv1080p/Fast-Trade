@@ -16,9 +16,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -225,4 +228,116 @@ fun EmptyState(message: String, icon: @Composable () -> Unit = {}) {
             textAlign = TextAlign.Center
         )
     }
+}
+
+// ─── Modal padronizado ─────────────────────────────────────────────────────────
+
+/** Cores de campo para os diálogos: borda neutra, verde só no foco, ícone discreto. */
+@Composable
+fun ftDialogFieldColors() = OutlinedTextFieldDefaults.colors(
+    focusedBorderColor = Primary,
+    unfocusedBorderColor = Color(0xFFDADCE0),
+    focusedLabelColor = Primary,
+    focusedLeadingIconColor = Primary,
+    unfocusedLeadingIconColor = TextSecondary,
+    cursorColor = Primary
+)
+
+/** OutlinedTextField arredondado, no estilo dos modais. */
+@Composable
+fun FtDialogField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    label: String,
+    modifier: Modifier = Modifier,
+    leadingIcon: ImageVector? = null,
+    trailingIcon: @Composable (() -> Unit)? = null,
+    isPassword: Boolean = false,
+    keyboardType: KeyboardType = KeyboardType.Text,
+    singleLine: Boolean = true,
+    isError: Boolean = false,
+    supportingText: String? = null,
+    placeholder: String? = null
+) {
+    OutlinedTextField(
+        value = value,
+        onValueChange = onValueChange,
+        label = { Text(label) },
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        colors = ftDialogFieldColors(),
+        singleLine = singleLine,
+        isError = isError,
+        visualTransformation = if (isPassword) PasswordVisualTransformation() else VisualTransformation.None,
+        keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
+        leadingIcon = leadingIcon?.let { { Icon(it, contentDescription = null) } },
+        trailingIcon = trailingIcon,
+        placeholder = placeholder?.let { { Text(it) } },
+        supportingText = supportingText?.let { { Text(it, color = Error) } }
+    )
+}
+
+/**
+ * AlertDialog padronizado: cantos suaves, badge de ícone, título + subtítulo,
+ * botão de confirmar preenchido e cancelar discreto. `content` são os campos/mensagem.
+ */
+@Composable
+fun FtDialog(
+    onDismiss: () -> Unit,
+    title: String,
+    confirmText: String,
+    onConfirm: () -> Unit,
+    modifier: Modifier = Modifier,
+    subtitle: String? = null,
+    icon: ImageVector? = null,
+    confirmEnabled: Boolean = true,
+    confirmColor: Color = Primary,
+    dismissText: String = "Cancelar",
+    content: @Composable ColumnScope.() -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        modifier = modifier,
+        shape = RoundedCornerShape(20.dp),
+        containerColor = Color.White,
+        icon = icon?.let {
+            {
+                Box(
+                    modifier = Modifier.size(44.dp).clip(CircleShape).background(confirmColor.copy(alpha = 0.10f)),
+                    contentAlignment = Alignment.Center
+                ) { Icon(it, contentDescription = null, tint = confirmColor, modifier = Modifier.size(24.dp)) }
+            }
+        },
+        title = {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(title, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
+                if (subtitle != null) {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        subtitle,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = TextSecondary,
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+        },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp), content = content)
+        },
+        confirmButton = {
+            Button(
+                onClick = onConfirm,
+                enabled = confirmEnabled,
+                shape = RoundedCornerShape(10.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = confirmColor)
+            ) { Text(confirmText, color = Color.White, fontWeight = FontWeight.SemiBold) }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text(dismissText, color = TextSecondary) }
+        }
+    )
 }

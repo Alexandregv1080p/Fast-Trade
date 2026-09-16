@@ -54,6 +54,22 @@ fun PaymentStatusScreen(
     Column(modifier = Modifier.fillMaxSize().background(Color.White)) {
         FtTopBar(title = "Pagamento", onBack = onDone)
 
+        // Selo honesto: pagamento é simulado neste projeto (não-comercial).
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(Color(0xFFFFF8E1))
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(Icons.Default.Info, null, tint = Color(0xFFF57F17), modifier = Modifier.size(16.dp))
+            Text(
+                "Modo simulação — nenhum pagamento real é processado.",
+                fontSize = 12.sp, color = Color(0xFF8A6D1B)
+            )
+        }
+
         Column(
             modifier = Modifier
                 .weight(1f)
@@ -128,7 +144,7 @@ private fun PixContent(orderId: Long, amount: Double) {
             .padding(14.dp),
         contentAlignment = Alignment.Center
     ) {
-        // TODO(3.2): renderizar o QR real do PagBank (pixQrCodeUrl via AsyncImage, ou
+        // TODO(3.2): renderizar o QR real do Mercado Pago (pixQrCodeUrl via AsyncImage, ou
         //   gerar do pixCopyPaste com uma lib de QR) em vez deste placeholder decorativo.
         QrPlaceholder(seed = orderId.toInt() + amount.toInt())
     }

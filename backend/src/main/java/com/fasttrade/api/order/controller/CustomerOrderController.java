@@ -143,9 +143,9 @@ public class CustomerOrderController {
         order.setDeliveryFee(deliveryFee);
         order.setTotal(subtotal.add(deliveryFee).add(tax).subtract(discount).max(BigDecimal.ZERO));
 
-        // Ponto de integração da Fase 3.1: quando o PagBank estiver configurado,
-        // criar a cobrança aqui e guardar a referência. Sem token, segue o fluxo atual.
-        // if (pagBankConfig.enabled()) {
+        // Ponto de integração da Fase 3.1: quando o Mercado Pago estiver configurado,
+        // criar o pagamento aqui e guardar a referência. Sem token, segue o fluxo atual.
+        // if (mercadoPagoConfig.enabled()) {
         //     PaymentResult charge = paymentService.createCharge(order, order.getPaymentMethod(), req.getCardToken());
         //     order.setChargeId(charge.chargeId());
         //     // devolver dados do PIX/boleto (charge.pixCopyPaste(), charge.boletoLine(), ...) na resposta

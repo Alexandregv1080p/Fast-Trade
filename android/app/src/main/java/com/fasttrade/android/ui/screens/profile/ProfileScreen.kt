@@ -52,21 +52,24 @@ fun ProfileScreen(
 
     // ── Logout dialog ──────────────────────────────────────────────────────
     if (showLogoutDialog) {
-        AlertDialog(
-            onDismissRequest = { showLogoutDialog = false },
-            title = { Text("Sair da conta") },
-            text = { Text("Tem certeza que deseja sair?") },
-            confirmButton = {
-                TextButton(onClick = {
-                    showLogoutDialog = false
-                    viewModel.logout()
-                    onLogout()
-                }) { Text("Sair", color = Error) }
-            },
-            dismissButton = {
-                TextButton(onClick = { showLogoutDialog = false }) { Text("Cancelar") }
+        FtDialog(
+            onDismiss = { showLogoutDialog = false },
+            icon = Icons.Default.Logout,
+            title = "Sair da conta",
+            confirmText = "Sair",
+            confirmColor = Error,
+            onConfirm = {
+                showLogoutDialog = false
+                viewModel.logout()
+                onLogout()
             }
-        )
+        ) {
+            Text(
+                "Tem certeza que deseja sair? Você precisará entrar novamente.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = TextSecondary
+            )
+        }
     }
 
     // ── Change password dialog ─────────────────────────────────────────────
@@ -258,67 +261,58 @@ private fun ChangePasswordDialog(
     var showNew     by remember { mutableStateOf(false) }
     var error    by remember { mutableStateOf<String?>(null) }
 
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Alterar senha") },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                if (error != null) {
-                    Text(error!!, color = Error, style = MaterialTheme.typography.bodySmall)
-                }
-                OutlinedTextField(
-                    value = current,
-                    onValueChange = { current = it; error = null },
-                    label = { Text("Senha atual") },
-                    visualTransformation = if (showCurrent) VisualTransformation.None else PasswordVisualTransformation(),
-                    trailingIcon = {
-                        IconButton(onClick = { showCurrent = !showCurrent }) {
-                            Icon(if (showCurrent) Icons.Default.VisibilityOff else Icons.Default.Visibility, contentDescription = null)
-                        }
-                    },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
-                OutlinedTextField(
-                    value = newPw,
-                    onValueChange = { newPw = it; error = null },
-                    label = { Text("Nova senha (mín. 8 caracteres)") },
-                    visualTransformation = if (showNew) VisualTransformation.None else PasswordVisualTransformation(),
-                    trailingIcon = {
-                        IconButton(onClick = { showNew = !showNew }) {
-                            Icon(if (showNew) Icons.Default.VisibilityOff else Icons.Default.Visibility, contentDescription = null)
-                        }
-                    },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
-                OutlinedTextField(
-                    value = confirm,
-                    onValueChange = { confirm = it; error = null },
-                    label = { Text("Confirmar nova senha") },
-                    visualTransformation = PasswordVisualTransformation(),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
+    FtDialog(
+        onDismiss = onDismiss,
+        icon = Icons.Default.Lock,
+        title = "Alterar senha",
+        confirmText = "Salvar",
+        onConfirm = {
+            when {
+                current.isBlank() -> error = "Informe a senha atual"
+                newPw.length < 8  -> error = "A nova senha deve ter no mínimo 8 caracteres"
+                newPw != confirm  -> error = "As senhas não coincidem"
+                else -> onConfirm(current, newPw)
             }
-        },
-        confirmButton = {
-            TextButton(onClick = {
-                when {
-                    current.isBlank() -> error = "Informe a senha atual"
-                    newPw.length < 8  -> error = "A nova senha deve ter no mínimo 8 caracteres"
-                    newPw != confirm  -> error = "As senhas não coincidem"
-                    else -> onConfirm(current, newPw)
-                }
-            }) { Text("Salvar", color = Primary) }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancelar") }
         }
-    )
+    ) {
+        if (error != null) {
+            Text(error!!, color = Error, style = MaterialTheme.typography.bodySmall)
+        }
+        FtDialogField(
+            value = current,
+            onValueChange = { current = it; error = null },
+            label = "Senha atual",
+            leadingIcon = Icons.Default.Lock,
+            isPassword = !showCurrent,
+            keyboardType = KeyboardType.Password,
+            trailingIcon = {
+                IconButton(onClick = { showCurrent = !showCurrent }) {
+                    Icon(if (showCurrent) Icons.Default.VisibilityOff else Icons.Default.Visibility, contentDescription = null)
+                }
+            }
+        )
+        FtDialogField(
+            value = newPw,
+            onValueChange = { newPw = it; error = null },
+            label = "Nova senha (mín. 8 caracteres)",
+            leadingIcon = Icons.Default.LockReset,
+            isPassword = !showNew,
+            keyboardType = KeyboardType.Password,
+            trailingIcon = {
+                IconButton(onClick = { showNew = !showNew }) {
+                    Icon(if (showNew) Icons.Default.VisibilityOff else Icons.Default.Visibility, contentDescription = null)
+                }
+            }
+        )
+        FtDialogField(
+            value = confirm,
+            onValueChange = { confirm = it; error = null },
+            label = "Confirmar nova senha",
+            leadingIcon = Icons.Default.LockReset,
+            isPassword = true,
+            keyboardType = KeyboardType.Password
+        )
+    }
 }
 
 @Composable
@@ -333,46 +327,36 @@ private fun EditProfileDialog(
     var phone by remember { mutableStateOf(currentPhone) }
     var birth by remember { mutableStateOf(currentBirth) }
 
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Editar perfil") },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                OutlinedTextField(
-                    value = name,
-                    onValueChange = { name = it },
-                    label = { Text("Nome") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
-                OutlinedTextField(
-                    value = phone,
-                    onValueChange = { phone = it },
-                    label = { Text("Telefone") },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
-                OutlinedTextField(
-                    value = birth,
-                    onValueChange = { birth = it },
-                    label = { Text("Data de nascimento (YYYY-MM-DD)") },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    placeholder = { Text("1990-01-15") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = { if (name.isNotBlank()) onConfirm(name, phone, birth) }) {
-                Text("Salvar", color = Primary)
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancelar") }
-        }
-    )
+    FtDialog(
+        onDismiss = onDismiss,
+        icon = Icons.Default.Person,
+        title = "Editar perfil",
+        confirmText = "Salvar",
+        confirmEnabled = name.isNotBlank(),
+        onConfirm = { if (name.isNotBlank()) onConfirm(name, phone, birth) }
+    ) {
+        FtDialogField(
+            value = name,
+            onValueChange = { name = it },
+            label = "Nome",
+            leadingIcon = Icons.Default.Person
+        )
+        FtDialogField(
+            value = phone,
+            onValueChange = { phone = it },
+            label = "Telefone",
+            leadingIcon = Icons.Default.Phone,
+            keyboardType = KeyboardType.Phone
+        )
+        FtDialogField(
+            value = birth,
+            onValueChange = { birth = it },
+            label = "Data de nascimento (YYYY-MM-DD)",
+            leadingIcon = Icons.Default.CalendarToday,
+            keyboardType = KeyboardType.Number,
+            placeholder = "1990-01-15"
+        )
+    }
 }
 
 @Composable
