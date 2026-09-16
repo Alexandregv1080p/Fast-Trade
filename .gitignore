@@ -1,9 +1,10 @@
-# === OS / editor junk ===
+# === OS / editor / tooling junk ===
 .DS_Store
 Thumbs.db
 *.swp
 .vscode/
 *.iml
+.claude/
 
 # === Java heap/crash dumps (these can be hundreds of MB) ===
 *.hprof

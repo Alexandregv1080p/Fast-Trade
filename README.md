@@ -12,14 +12,44 @@ Marketplace de compra, venda e troca de produtos. Monorepo com três aplicaçõe
 
 ## Demonstração
 
-<!-- Salve os prints/GIF em docs/screenshots/ e referencie abaixo. Um GIF do fluxo
-     de checkout vale mais que dez linhas de texto — é o que o recrutador vê primeiro. -->
+<!--
+  SHOT LIST — capture na sua máquina e salve em docs/screenshots/ com ESTES nomes.
+  (Android Studio: Emulator → ícone de câmera p/ print; ícone de vídeo p/ o GIF.)
 
-| Cliente (Android) | Painel Admin (Angular) |
+  Android:    android-home.png · android-product.png · android-cart.png ·
+              android-checkout.png · android-payment.png · android-orders.png ·
+              android-chat.png · android-profile.png
+  Admin (web): admin-dashboard.png · admin-products.png
+  Engenharia:  swagger.png (Swagger UI) · ci.png (CI verde no GitHub Actions)
+  Hero:        checkout.gif (fluxo carrinho → pagamento)
+
+  Dica: enquanto não colar um arquivo, a imagem aparece quebrada — cole todos antes de commitar,
+  ou remova as linhas dos que não for usar.
+-->
+
+<p align="center">
+  <img src="docs/screenshots/checkout.gif" alt="Fluxo de checkout" width="280">
+</p>
+
+### App do cliente (Android)
+
+| Início | Produto | Carrinho |
+|---|---|---|
+| ![Início](docs/screenshots/android-home.png) | ![Produto](docs/screenshots/android-product.png) | ![Carrinho](docs/screenshots/android-cart.png) |
+| **Pagamento** | **Pedido** | **Perfil** |
+| ![Pagamento](docs/screenshots/android-payment.png) | ![Pedido](docs/screenshots/android-orders.png) | ![Perfil](docs/screenshots/android-profile.png) |
+
+### Painel administrativo (Angular)
+
+| Dashboard | Produtos |
 |---|---|
-| ![App Android](docs/screenshots/android-home.png) | ![Painel admin](docs/screenshots/admin-dashboard.png) |
+| ![Dashboard](docs/screenshots/admin-dashboard.png) | ![Produtos](docs/screenshots/admin-products.png) |
 
-> **GIF do checkout:** `docs/screenshots/checkout.gif` · **Demo ao vivo:** _em breve_
+### Engenharia
+
+| Swagger / OpenAPI | CI (GitHub Actions) |
+|---|---|
+| ![Swagger UI](docs/screenshots/swagger.png) | ![CI verde](docs/screenshots/ci.png) |
 
 ---
 
