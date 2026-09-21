@@ -21,7 +21,7 @@ android {
         multiDexEnabled = true
 
         // Replace with your backend URL (use 10.0.2.2 for emulator → localhost)
-        buildConfigField("String", "BASE_URL", "\"http://10.0.2.2:8080/api/\"")
+        buildConfigField("String", "BASE_URL", "\"http://10.0.2.2:8081/api/\"")
     }
 
     buildTypes {
