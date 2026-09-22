@@ -1,6 +1,20 @@
-# Fast Trade
+<div align="center">
 
-Marketplace de compra, venda e troca de produtos. Monorepo com três aplicações:
+# 🛒 Fast Trade
+
+**Marketplace full-stack de compra, venda e troca — app Android, painel web e API REST.**
+
+[![CI](https://github.com/Alexandregv1080p/Fast-Trade/actions/workflows/ci.yml/badge.svg)](https://github.com/Alexandregv1080p/Fast-Trade/actions/workflows/ci.yml)
+![Java](https://img.shields.io/badge/Java-21-007396?logo=openjdk&logoColor=white)
+![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.2-6DB33F?logo=springboot&logoColor=white)
+![Kotlin](https://img.shields.io/badge/Kotlin-Compose-7F52FF?logo=kotlin&logoColor=white)
+![Angular](https://img.shields.io/badge/Angular-17-DD0031?logo=angular&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Flyway-4169E1?logo=postgresql&logoColor=white)
+![Kubernetes](https://img.shields.io/badge/Deploy-Helm%20%2F%20K8s-326CE5?logo=kubernetes&logoColor=white)
+
+</div>
+
+Monorepo com três aplicações sobre a mesma API:
 
 | App | Stack | Papel |
 |-----|-------|-------|
@@ -131,8 +145,7 @@ npm install
 npm start                   # http://localhost:4200
 ```
 
-> Enquanto o backend não estiver no ar, o Angular usa `MOCK_USERS` em
-> `src/app/core/services/auth-http.service.ts`. Remova esse bloco ao integrar com a API real.
+> Requer o backend no ar (API em `http://localhost:8080`) — o painel consome a API real.
 
 ### Android
 
