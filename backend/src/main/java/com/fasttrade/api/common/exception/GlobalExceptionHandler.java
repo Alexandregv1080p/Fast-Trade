@@ -32,6 +32,14 @@ public class GlobalExceptionHandler {
                 .body(Map.of("error", first, "fields", fields));
     }
 
+    /** Rota inexistente → 404 limpo (em vez de cair no handler genérico como 500). */
+    @ExceptionHandler(org.springframework.web.servlet.resource.NoResourceFoundException.class)
+    public ResponseEntity<Map<String, String>> handleNotFound(
+            org.springframework.web.servlet.resource.NoResourceFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(Map.of("error", "Recurso não encontrado: " + ex.getResourcePath()));
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, String>> handleGeneric(Exception ex) {
         return ResponseEntity.internalServerError()
